@@ -1,0 +1,58 @@
+:root {
+  --club-rojo: #d7263d;
+  --club-rojo-hover: #b91d32;
+  --club-bordo: #7a0f2e;
+  --club-bordo-profundo: #4a0a1c;
+  --club-dorado: #e3b23c;
+  --club-crema: #fbf5ea;
+  --club-blanco: #ffffff;
+  --club-grafito: #1e1b24;
+  --club-gris-fondo: #f6f4f7;
+  --club-gris-texto: #6b6475;
+
+  --club-radio: 0.75rem;
+  --club-sombra: 0 6px 20px rgba(74, 10, 28, 0.08);
+
+
+  --bs-primary: var(--club-rojo);
+  --bs-primary-rgb: 215, 38, 61;
+  --bs-secondary: var(--club-bordo);
+  --bs-secondary-rgb: 122, 15, 46;
+  --bs-warning: var(--club-dorado);
+  --bs-warning-rgb: 227, 178, 60;
+  --bs-dark: var(--club-grafito);
+  --bs-dark-rgb: 30, 27, 36;
+  --bs-body-color: var(--club-grafito);
+  --bs-body-bg: var(--club-blanco);
+  --bs-link-color: var(--club-bordo);
+  --bs-link-color-rgb: 122, 15, 46;
+  --bs-link-hover-color: var(--club-rojo);
+  --bs-border-radius: var(--club-radio);
+}
+
+body {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--club-rojo);
+  --bs-btn-border-color: var(--club-rojo);
+  --bs-btn-hover-bg: var(--club-rojo-hover);
+  --bs-btn-hover-border-color: var(--club-rojo-hover);
+  --bs-btn-active-bg: var(--club-bordo);
+  --bs-btn-active-border-color: var(--club-bordo);
+}
+
+.btn-secondary {
+  --bs-btn-bg: var(--club-bordo);
+  --bs-btn-border-color: var(--club-bordo);
+  --bs-btn-hover-bg: var(--club-bordo-profundo);
+  --bs-btn-hover-border-color: var(--club-bordo-profundo);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--club-rojo);
+  --bs-btn-border-color: var(--club-rojo);
+  --bs-btn-hover-bg: var(--club-rojo);
+  --bs-btn-hover-border-color: var(--club-rojo);
+}
