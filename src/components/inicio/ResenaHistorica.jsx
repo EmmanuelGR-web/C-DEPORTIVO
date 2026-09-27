@@ -1,0 +1,45 @@
+import { useState } from 'react'
+import { Container, Row, Col, Button } from 'react-bootstrap'
+import { FaBookOpen } from 'react-icons/fa'
+import PaginaRevista from './PaginaRevista'
+import RevistaDigital from './RevistaDigital'
+
+function ResenaHistorica({ resumen, paginas }) {
+  const [mostrarRevista, setMostrarRevista] = useState(false)
+  const abrir = () => setMostrarRevista(true)
+
+  return (
+    <section id="resena" className="bg-body-tertiary py-5">
+      <Container>
+        <Row className="align-items-center g-4 g-md-5">
+          <Col md={5} className="d-flex justify-content-center">
+            
+            <button
+              type="button"
+              onClick={abrir}
+              aria-label="Abrir la revista digital"
+              className="border-0 p-0 bg-transparent shadow-lg w-100"
+              style={{ maxWidth: 300, aspectRatio: '420 / 594', transform: 'rotate(-3deg)' }}
+            >
+              <PaginaRevista pagina={paginas[0]} numero={1} className="w-100 h-100" />
+            </button>
+          </Col>
+
+          <Col md={7} className="text-center text-md-start">
+            <span className="text-uppercase fw-bold text-primary small">Reseña histórica</span>
+            <h2 className="fw-bolder text-uppercase fst-italic mb-3">Más de 100 años de historia</h2>
+            <p className="lead mb-4">{resumen}</p>
+            <Button variant="secondary" size="lg" className="rounded-pill px-4 d-inline-flex align-items-center gap-2" onClick={abrir}>
+              <FaBookOpen />
+              Leer la revista digital
+            </Button>
+          </Col>
+        </Row>
+      </Container>
+
+      <RevistaDigital mostrar={mostrarRevista} onCerrar={() => setMostrarRevista(false)} paginas={paginas} />
+    </section>
+  )
+}
+
+export default ResenaHistorica
