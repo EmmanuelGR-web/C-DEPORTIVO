@@ -16,7 +16,7 @@ function BannerVideo({ video, textoBoton = 'Asociate', altura = '70vh' }) {
         playsInline
         aria-hidden="true"
         className="position-absolute start-0 w-100 object-fit-cover"
-        // El video trae franjas negras arriba (con la marca de agua) y abajo: se agranda y se centra para dejarlas afuera
+        
         style={{ height: '131%', top: '-15.5%' }}
       />
 
