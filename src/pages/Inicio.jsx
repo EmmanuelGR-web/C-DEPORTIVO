@@ -5,9 +5,11 @@ import Telon from '../components/inicio/Telon'
 import BannerVideo from '../components/inicio/BannerVideo'
 import ResenaHistorica from '../components/inicio/ResenaHistorica'
 import Noticias from '../components/inicio/Noticias'
+import Calendario from '../components/inicio/Calendario'
 import { enlacesInicio } from '../data/menus'
 import { resumenResena, paginasRevista } from '../data/revista'
 import { noticias } from '../data/noticias'
+import { eventos } from '../data/eventos'
 
 function Inicio() {
   return (
@@ -21,6 +23,7 @@ function Inicio() {
             
             <Col lg={8} xl={9} className="d-flex flex-column gap-4">
               <ResenaHistorica resumen={resumenResena} paginas={paginasRevista} />
+              <Calendario eventos={eventos} />
             </Col>
             <Col lg={4} xl={3}>
               <Noticias noticias={noticias} />
