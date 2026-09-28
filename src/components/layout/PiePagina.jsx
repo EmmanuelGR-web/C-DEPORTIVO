@@ -7,7 +7,7 @@ const PiePagina = ({ children }) => {
   return (
     <footer className="text-white">
       {children && (
-        <div className="bg-body-tertiary text-body py-4">
+        <div className="bg-body-tertiary text-body border-top border-warning border-3 py-4">
           <Container>{children}</Container>
         </div>
       )}
