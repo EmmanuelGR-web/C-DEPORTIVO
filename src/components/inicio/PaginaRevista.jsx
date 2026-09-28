@@ -31,7 +31,7 @@ function Volanta({ children }) {
 function Tapa({ edicion, titulo, bajada, imagen }) {
   return (
     <div className="position-relative h-100 bg-dark text-white">
-      <img src={imagen} alt="" className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" />
+      <img src={imagen} alt="" loading="lazy" className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" />
       <div className="position-relative bg-primary px-3 py-2 shadow">
         <div className="fw-bolder fst-italic text-uppercase lh-1" style={letra.titulo}>
           Revista del Club
@@ -92,7 +92,7 @@ function Articulo({ numero, volanta, titulo, bajada, imagen, epigrafe, texto, da
         </div>
         <p className="fw-semibold lh-sm mb-2">{bajada}</p>
         <figure className="mb-2">
-          <img src={imagen} alt={epigrafe} className="w-100 object-fit-cover shadow-sm" style={{ aspectRatio: '3 / 2' }} />
+          <img src={imagen} alt={epigrafe} loading="lazy" className="w-100 object-fit-cover shadow-sm" style={{ aspectRatio: '3 / 2' }} />
           <figcaption className="fst-italic text-body-secondary mt-1" style={letra.chica}>
             {epigrafe}
           </figcaption>

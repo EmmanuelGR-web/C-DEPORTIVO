@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /socio
+Disallow: /empleado
+Disallow: /admin
+
+Sitemap: https://c-deportivo.vercel.app/sitemap.xml

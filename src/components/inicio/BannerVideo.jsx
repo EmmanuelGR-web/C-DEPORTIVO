@@ -1,7 +1,7 @@
 import { Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 
-function BannerVideo({ video, textoBoton = 'Asociate', altura = '70vh' }) {
+function BannerVideo({ video, titulo, lema, textoBoton = 'Asociate', altura = '70vh' }) {
   return (
     <section
       id="inicio"
@@ -23,7 +23,9 @@ function BannerVideo({ video, textoBoton = 'Asociate', altura = '70vh' }) {
     
       <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" />
 
-      <div className="position-relative h-100 d-flex align-items-center justify-content-center">
+      <div className="position-relative h-100 d-flex flex-column align-items-center justify-content-center text-center text-white px-3">
+        <h1 className="display-3 fw-bolder text-uppercase fst-italic mb-2">{titulo}</h1>
+        <p className="lead fw-semibold mb-4">{lema}</p>
         <Button
           as={Link}
           to="/registro"

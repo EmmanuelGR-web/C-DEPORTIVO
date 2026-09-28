@@ -38,7 +38,7 @@ function Noticias({ noticias }) {
                 </Badge>
                 <small className="text-body-secondary">{formatearFecha(abierta.fecha)}</small>
               </div>
-              {abierta.imagen && <Image src={abierta.imagen} alt={abierta.titulo} fluid rounded className="mb-3" />}
+              {abierta.imagen && <Image src={abierta.imagen} alt={abierta.titulo} loading="lazy" fluid rounded className="mb-3" />}
               {abierta.cuerpo.map((parrafo) => (
                 <p key={parrafo}>{parrafo}</p>
               ))}
