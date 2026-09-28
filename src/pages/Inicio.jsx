@@ -10,13 +10,20 @@ import { enlacesInicio } from '../data/menus'
 import { resumenResena, paginasRevista } from '../data/revista'
 import { noticias } from '../data/noticias'
 import { eventos } from '../data/eventos'
+import { useTituloPagina } from '../hooks/useTituloPagina'
 
 function Inicio() {
+  useTituloPagina()
+
   return (
     <>
       <Telon imagen="/telon.jpeg" />
       <BarraNavegacion enlaces={enlacesInicio} />
-      <BannerVideo video="/videobanner.mp4" />
+      <BannerVideo
+        video="/videobanner.mp4"
+        titulo="Club Deportivo"
+        lema="Más de 100 años de historia, pasión y comunidad tucumana"
+      />
       <div className="bg-body-tertiary py-5">
         <Container>
           <Row className="g-4">
