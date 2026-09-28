@@ -30,7 +30,7 @@ function Telon({ imagen, demora = 1200, duracion = 1400 }) {
   return (
     <div
       aria-hidden="true"
-      className="position-fixed top-0 start-0 w-100 vh-100 overflow-hidden bg-secondary shadow-lg"
+      className="position-fixed top-0 start-0 w-100 vh-100 overflow-hidden bg-dark shadow-lg"
       style={{
         zIndex: 1060,
         transform: subiendo ? 'translateY(-100%)' : 'none',

@@ -1,3 +1,10 @@
+export const coloresCategoria = {
+  Fútbol: { bg: 'primary' },
+  Institucional: { bg: 'warning', text: 'dark' },
+  Tienda: { bg: 'dark' },
+  Básquet: { bg: 'light', text: 'dark', borde: true },
+}
+
 // Noticias de la columna derecha de Inicio. imagen y enlace son opcionales.
 export const noticias = [
   {

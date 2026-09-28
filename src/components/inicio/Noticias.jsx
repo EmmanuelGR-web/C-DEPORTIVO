@@ -3,6 +3,7 @@ import { Modal, Badge, Button, Image } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import TarjetaNoticia from './TarjetaNoticia'
 import { formatearFecha } from '../../utils/fechas'
+import { coloresCategoria } from '../../data/noticias'
 
 function Noticias({ noticias }) {
  
@@ -28,12 +29,16 @@ function Noticias({ noticias }) {
       <Modal show={mostrar} onHide={cerrar} centered>
         {abierta && (
           <>
-            <Modal.Header closeButton className="bg-secondary text-white" closeVariant="white">
+            <Modal.Header closeButton className="bg-dark text-white" closeVariant="white">
               <Modal.Title className="h5 fw-bold">{abierta.titulo}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <Badge bg="primary" className="text-uppercase">
+                <Badge
+                  bg={coloresCategoria[abierta.categoria].bg}
+                  text={coloresCategoria[abierta.categoria].text}
+                  className={`text-uppercase ${coloresCategoria[abierta.categoria].borde ? 'border' : ''}`}
+                >
                   {abierta.categoria}
                 </Badge>
                 <small className="text-body-secondary">{formatearFecha(abierta.fecha)}</small>

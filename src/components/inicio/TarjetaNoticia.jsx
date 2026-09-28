@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Badge } from 'react-bootstrap'
 import { formatearFecha } from '../../utils/fechas'
+import { coloresCategoria } from '../../data/noticias'
 
 function TarjetaNoticia({ noticia, onAbrir }) {
   const [encima, setEncima] = useState(false)
+  const color = coloresCategoria[noticia.categoria]
 
   return (
     <button
@@ -16,7 +18,7 @@ function TarjetaNoticia({ noticia, onAbrir }) {
       }`}
     >
       <div className="d-flex justify-content-between align-items-center mb-1">
-        <Badge bg="secondary" className="text-uppercase">
+        <Badge bg={color.bg} text={color.text} className={`text-uppercase ${color.borde ? 'border' : ''}`}>
           {noticia.categoria}
         </Badge>
         <small className="text-body-secondary">{formatearFecha(noticia.fecha)}</small>

@@ -10,7 +10,7 @@ Club Deportivo
 
 La consigna era tomar el sitio que había hecho antes en HTML, CSS y JavaScript ([Repositorio N° 1](https://github.com/EmmanuelGR-web/CLUB-DEPORTIVO)) y migrarlo a React, de a poco, separándolo en componentes reutilizables que se comunican por props.
 
-No me limité a pasar el HTML a JSX: aproveché la migración para rediseñar varias partes. El sitio ahora tiene un telón de bienvenida, un banner con video, una revista digital que se hojea como un libro, un calendario de partidos y una columna de noticias.
+No me limité a pasar el HTML a JSX: aproveché la migración para rediseñar varias partes. El sitio ahora tiene un telón de bienvenida, un banner con video, una revista digital que se hojea como un libro, un calendario de partidos, una columna de noticias, las disciplinas en forma de mazo de cartas y una galería de fotos que pasa sola.
 
 
 ## Tecnologías
