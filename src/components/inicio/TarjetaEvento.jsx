@@ -18,7 +18,7 @@ function TarjetaEvento({ evento, onAbrir }) {
         encima ? 'border-warning shadow' : 'shadow-sm'
       }`}
     >
-      <div className={`w-100 d-flex align-items-center gap-3 px-3 py-2 text-white ${encima ? 'bg-primary' : 'bg-secondary'}`}>
+      <div className={`w-100 d-flex align-items-center gap-3 px-3 py-2 text-white ${encima ? 'bg-primary' : 'bg-dark'}`}>
         <span className="display-6 fw-bolder lh-1">{dia}</span>
         <span className="d-flex flex-column text-uppercase lh-sm">
           <span className="fw-bold">{mes}</span>

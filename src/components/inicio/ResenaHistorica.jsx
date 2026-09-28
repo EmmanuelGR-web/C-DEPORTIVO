@@ -27,7 +27,7 @@ function ResenaHistorica({ resumen, paginas }) {
           <span className="text-uppercase fw-bold text-primary small">Reseña histórica</span>
           <h2 className="fw-bolder text-uppercase fst-italic mb-3">Más de 100 años de historia</h2>
           <p className="mb-4">{resumen}</p>
-          <Button variant="secondary" size="lg" className="rounded-pill px-4 d-inline-flex align-items-center gap-2" onClick={abrir}>
+          <Button variant="dark" size="lg" className="rounded-pill px-4 d-inline-flex align-items-center gap-2" onClick={abrir}>
             <FaBookOpen />
             Leer la revista digital
           </Button>

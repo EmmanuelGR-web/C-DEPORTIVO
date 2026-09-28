@@ -45,7 +45,7 @@ function Calendario({ eventos }) {
   return (
     <section id="calendario" className="bg-white rounded-4 shadow-sm p-4">
       <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
-        <span className="d-none d-sm-inline-flex align-items-center justify-content-center rounded-circle bg-secondary text-white p-3 fs-4">
+        <span className="d-none d-sm-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark p-3 fs-4">
           <FaCalendarAlt aria-hidden="true" />
         </span>
         <div>
@@ -53,10 +53,10 @@ function Calendario({ eventos }) {
           <h2 className="fw-bolder text-uppercase fst-italic mb-0">Calendario</h2>
         </div>
         <div className="ms-auto d-flex gap-2">
-          <Button variant="outline-secondary" className="rounded-circle" onClick={() => mover(-1)} disabled={enInicio} aria-label="Eventos anteriores">
+          <Button variant="outline-dark" className="rounded-circle" onClick={() => mover(-1)} disabled={enInicio} aria-label="Eventos anteriores">
             <FaChevronLeft />
           </Button>
-          <Button variant="secondary" className="rounded-circle" onClick={() => mover(1)} disabled={enFinal} aria-label="Eventos siguientes">
+          <Button variant="dark" className="rounded-circle" onClick={() => mover(1)} disabled={enFinal} aria-label="Eventos siguientes">
             <FaChevronRight />
           </Button>
         </div>
@@ -78,7 +78,7 @@ function Calendario({ eventos }) {
       <Modal show={mostrar} onHide={() => setMostrar(false)} centered>
         {abierto && (
           <>
-            <Modal.Header closeButton closeVariant="white" className="bg-secondary text-white">
+            <Modal.Header closeButton closeVariant="white" className="bg-dark text-white">
               <Modal.Title className="h5 fw-bold">
                 <span className="d-block text-uppercase small text-white-50">{abierto.disciplina}</span>
                 {abierto.titulo}
