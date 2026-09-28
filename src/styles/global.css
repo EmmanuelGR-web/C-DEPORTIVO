@@ -28,6 +28,13 @@
   --bs-link-color-rgb: 122, 15, 46;
   --bs-link-hover-color: var(--club-rojo);
   --bs-border-radius: var(--club-radio);
+  --bs-tertiary-bg: var(--club-crema);
+  --bs-tertiary-bg-rgb: 251, 245, 234;
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 body {

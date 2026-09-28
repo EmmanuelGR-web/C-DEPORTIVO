@@ -13,7 +13,7 @@ const letra = {
 
 function Encabezado({ numero }) {
   return (
-    <div className="d-flex justify-content-between bg-secondary text-white text-uppercase fw-bold px-3 py-1" style={letra.chica}>
+    <div className="d-flex justify-content-between bg-dark text-white text-uppercase fw-bold px-3 py-1" style={letra.chica}>
       <span>Revista del Club</span>
       <span>{numero}</span>
     </div>
@@ -31,7 +31,7 @@ function Volanta({ children }) {
 function Tapa({ edicion, titulo, bajada, imagen }) {
   return (
     <div className="position-relative h-100 bg-dark text-white">
-      <img src={imagen} alt="" className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" />
+      <img src={imagen} alt="" loading="lazy" className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" />
       <div className="position-relative bg-primary px-3 py-2 shadow">
         <div className="fw-bolder fst-italic text-uppercase lh-1" style={letra.titulo}>
           Revista del Club
@@ -69,7 +69,7 @@ function Indice({ numero, volanta, titulo, texto, sumario }) {
         <ul className="list-unstyled mb-0">
           {sumario.map(({ pagina, titulo: tituloNota }) => (
             <li key={pagina} className="d-flex align-items-center gap-2 mb-1">
-              <span className="badge bg-secondary">{pagina}</span>
+              <span className="badge bg-dark">{pagina}</span>
               <span className="fw-semibold lh-sm">{tituloNota}</span>
             </li>
           ))}
@@ -92,7 +92,7 @@ function Articulo({ numero, volanta, titulo, bajada, imagen, epigrafe, texto, da
         </div>
         <p className="fw-semibold lh-sm mb-2">{bajada}</p>
         <figure className="mb-2">
-          <img src={imagen} alt={epigrafe} className="w-100 object-fit-cover shadow-sm" style={{ aspectRatio: '3 / 2' }} />
+          <img src={imagen} alt={epigrafe} loading="lazy" className="w-100 object-fit-cover shadow-sm" style={{ aspectRatio: '3 / 2' }} />
           <figcaption className="fst-italic text-body-secondary mt-1" style={letra.chica}>
             {epigrafe}
           </figcaption>
@@ -117,13 +117,13 @@ function Articulo({ numero, volanta, titulo, bajada, imagen, epigrafe, texto, da
 
 function Contratapa({ titulo, texto, onAsociarse }) {
   return (
-    <div className="h-100 d-flex flex-column align-items-center justify-content-center text-center bg-secondary text-white p-4">
+    <div className="h-100 d-flex flex-column align-items-center justify-content-center text-center bg-primary text-white p-4">
       <Image src="/logo.png" alt="Escudo del club" width="70%" className="object-fit-cover mb-3" style={{ aspectRatio: 1 }} />
       <div className="fw-bolder fst-italic text-uppercase lh-1 mb-2" style={letra.titulo}>
         {titulo}
       </div>
       <p className="mb-3">{texto}</p>
-      <Button as={Link} to="/registro" onClick={onAsociarse} variant="primary" className="rounded-pill px-4 fw-bold text-uppercase">
+      <Button as={Link} to="/registro" onClick={onAsociarse} variant="light" className="rounded-pill px-4 fw-bold text-uppercase text-primary">
         Asociate
       </Button>
     </div>
