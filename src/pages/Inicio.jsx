@@ -8,12 +8,16 @@ import Noticias from '../components/inicio/Noticias'
 import Calendario from '../components/inicio/Calendario'
 import Disciplinas from '../components/inicio/Disciplinas'
 import Galeria from '../components/inicio/Galeria'
+import Contacto from '../components/inicio/Contacto'
+import BarraProgreso from '../components/common/BarraProgreso'
+import BotonVolverArriba from '../components/common/BotonVolverArriba'
 import { enlacesInicio } from '../data/menus'
 import { resumenResena, paginasRevista } from '../data/revista'
 import { noticias } from '../data/noticias'
 import { eventos } from '../data/eventos'
 import { disciplinas } from '../data/disciplinas'
 import { fotosGaleria } from '../data/galeria'
+import { contactoClub } from '../data/club'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 
 function Inicio() {
@@ -22,6 +26,7 @@ function Inicio() {
   return (
     <>
       <Telon imagen="/telon.jpeg" />
+      <BarraProgreso />
       <BarraNavegacion enlaces={enlacesInicio} />
       <BannerVideo
         video="/videobanner.mp4"
@@ -50,7 +55,10 @@ function Inicio() {
           </Row>
         </Container>
       </div>
-      <PiePagina />
+      <PiePagina>
+        <Contacto datos={contactoClub} />
+      </PiePagina>
+      <BotonVolverArriba />
     </>
   )
 }

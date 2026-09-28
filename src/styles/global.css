@@ -32,6 +32,11 @@
   --bs-tertiary-bg-rgb: 251, 245, 234;
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
 }

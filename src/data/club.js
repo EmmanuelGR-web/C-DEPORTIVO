@@ -19,3 +19,14 @@ export const sponsors = [
   { id: 'fila', nombre: 'Fila', url: 'https://www.fila.com', icono: SiFila },
   { id: 'red-bull', nombre: 'Red Bull', url: 'https://www.redbull.com', icono: SiRedbull },
 ]
+
+export const contactoClub = {
+  direccion: 'Av. Mate de Luna 1919, San Miguel de Tucumán',
+  telefono: '(0381) 421-1919',
+  email: 'contacto@clubdeportivo.com.ar',
+  horario: 'Lunes a viernes de 9 a 20 h · Sábados de 9 a 13 h',
+  enlaceExterno: {
+    texto: 'Secretaría de Estado de Deportes de Tucumán',
+    url: 'https://guiadetramites.tucuman.gob.ar/organismo/17941/secretaria-de-estado-de-deportes.html',
+  },
+}
