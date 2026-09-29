@@ -30,6 +30,14 @@
   --bs-border-radius: var(--club-radio);
   --bs-tertiary-bg: var(--club-crema);
   --bs-tertiary-bg-rgb: 251, 245, 234;
+  --bs-primary-bg-subtle: #fbe3e6;
+  --bs-primary-border-subtle: #f1a9b3;
+  --bs-primary-text-emphasis: #8c1526;
+  --bs-secondary-bg-subtle: #f3dfe5;
+  --bs-secondary-border-subtle: #d9a3b3;
+  --bs-secondary-text-emphasis: #4a0a1c;
+  --bs-warning-bg-subtle: #fbf0d6;
+  --bs-warning-text-emphasis: #7a5a0f;
 }
 
 html,
@@ -62,4 +70,35 @@ body {
   --bs-btn-border-color: var(--club-rojo);
   --bs-btn-hover-bg: var(--club-rojo);
   --bs-btn-hover-border-color: var(--club-rojo);
+}
+
+.list-group {
+  --bs-list-group-active-bg: var(--club-bordo);
+  --bs-list-group-active-border-color: var(--club-bordo);
+}
+
+.pagination {
+  --bs-pagination-color: var(--club-grafito);
+  --bs-pagination-hover-color: var(--club-rojo);
+  --bs-pagination-active-bg: var(--club-rojo);
+  --bs-pagination-active-border-color: var(--club-rojo);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(215, 38, 61, 0.25);
+}
+
+.font-credencial {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.font-numeros {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--club-bordo);
+  --bs-btn-border-color: var(--club-bordo);
+  --bs-btn-hover-bg: var(--club-bordo);
+  --bs-btn-hover-border-color: var(--club-bordo);
+  --bs-btn-active-bg: var(--club-bordo-profundo);
+  --bs-btn-active-border-color: var(--club-bordo-profundo);
 }

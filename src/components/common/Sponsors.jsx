@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import CintaInfinita from './CintaInfinita'
 
 function TarjetaSponsor({ nombre, url, icono: Icono, copia }) {
   const [encima, setEncima] = useState(false)
@@ -24,30 +25,12 @@ function TarjetaSponsor({ nombre, url, icono: Icono, copia }) {
 }
 
 function Sponsors({ sponsors, segundosPorVuelta = 40 }) {
-  const cinta = useRef(null)
-  const animacion = useRef(null)
-
-  // La lista se repite dos veces: al llegar a la mitad, la animación vuelve al inicio sin que se note el salto
-  useEffect(() => {
-    animacion.current = cinta.current.animate(
-      [{ transform: 'translateX(0)' }, { transform: 'translateX(-50%)' }],
-      { duration: segundosPorVuelta * 1000, iterations: Infinity },
-    )
-    return () => animacion.current.cancel()
-  }, [segundosPorVuelta])
-
   return (
-    <div
-      className="overflow-hidden"
-      onMouseEnter={() => animacion.current?.pause()}
-      onMouseLeave={() => animacion.current?.play()}
-    >
-      <div ref={cinta} className="d-flex" style={{ width: 'max-content' }}>
-        {[false, true].map((copia) =>
-          sponsors.map((sponsor) => <TarjetaSponsor key={`${sponsor.id}-${copia}`} {...sponsor} copia={copia} />),
-        )}
-      </div>
-    </div>
+    <CintaInfinita
+      items={sponsors}
+      segundosPorVuelta={segundosPorVuelta}
+      renderItem={(sponsor, copia) => <TarjetaSponsor key={`${sponsor.id}-${copia}`} {...sponsor} copia={copia} />}
+    />
   )
 }
 

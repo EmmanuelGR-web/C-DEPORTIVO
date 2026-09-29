@@ -9,7 +9,6 @@ export const iconosDisciplina = {
   Institucional: FaUsers,
 }
 
-// Próximos eventos del calendario de Inicio. entradas y transmision son opcionales.
 export const eventos = [
   {
     id: 'basquet-talleres',

@@ -1,8 +1,6 @@
 import { Button, Image } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 
-// Los tamaños de letra se miden en "cqw" (ancho de la página): así el texto se achica
-// junto con el libro en pantallas chicas. Bootstrap no tiene clases para esto.
 const letra = {
   base: { fontSize: '3.2cqw' },
   titulo: { fontSize: '2.1em' },
@@ -132,8 +130,6 @@ function Contratapa({ titulo, texto, onAsociarse }) {
 
 const disenos = { tapa: Tapa, indice: Indice, articulo: Articulo, contratapa: Contratapa }
 
-// react-pageflip necesita el ref del div de cada página para poder moverla.
-// className solo se usa fuera del libro (en el libro, el tamaño lo pone react-pageflip)
 function PaginaRevista({ ref, pagina, numero, onAsociarse, className = '' }) {
   const Diseno = disenos[pagina.tipo]
 

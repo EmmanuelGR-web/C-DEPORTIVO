@@ -15,3 +15,6 @@ export const partesFecha = (fecha) => {
     diaSemana: f.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', ''),
   }
 }
+
+export const formatearFechaConAnio = (fecha) =>
+  aFecha(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
