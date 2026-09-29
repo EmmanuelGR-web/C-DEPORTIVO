@@ -108,7 +108,7 @@ function PagosFiltrables({ socio, porPagina = 12 }) {
                 <Filtro id="filtro-anio" etiqueta="Año" valor={filtro.anio} opciones={opcionesDe(socio.pagos, 'anio')} onCambiar={cambiarFiltro('anio')} />
               </Col>
               <Col xs={6} md>
-                <Filtro id="filtro-estado" etiqueta="Estado" valor={filtro.estado} opciones={['Aprobado', 'Pendiente']} onCambiar={cambiarFiltro('estado')} />
+                <Filtro id="filtro-estado" etiqueta="Estado" valor={filtro.estado} opciones={['Aprobado', 'Pendiente', 'Vencido', 'En revisión']} onCambiar={cambiarFiltro('estado')} />
               </Col>
               <Col xs={6} md>
                 <Filtro

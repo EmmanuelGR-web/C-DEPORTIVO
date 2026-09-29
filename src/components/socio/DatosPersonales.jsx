@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Row, Col, Form, Button, Alert } from 'react-bootstrap'
-import Tarjeta from './Tarjeta'
+import Tarjeta from '../common/Tarjeta'
 import { formatearFechaConAnio } from '../../utils/fechas'
 import { listaCampos } from '../../utils/validaciones'
 import { buscarDuplicado } from '../../utils/socios'
 import { leerAuditoria } from '../../utils/auditoria'
+import { camposIdentidad } from '../../utils/perfilSocio'
 
 const campos = listaCampos(['nombre', 'dni', 'fechaNacimiento', 'direccion', 'telefono', 'email'])
 
@@ -35,7 +36,9 @@ function HistorialCambios({ socioId }) {
   )
 }
 
-function DatosPersonales({ socio, onGuardar }) {
+function DatosPersonales({ socio, onGuardar, textoEditar = 'Modificar mis datos', textoGuardado = 'Tus datos se actualizaron y el cambio quedó registrado.', vistaPersonal = false }) {
+  const pendiente = vistaPersonal ? null : socio.identidadPendiente
+  const bloqueado = (campo) => Boolean(pendiente) && camposIdentidad.includes(campo)
   const [editando, setEditando] = useState(false)
   const [valores, setValores] = useState({})
   const [validado, setValidado] = useState(false)
@@ -61,8 +64,14 @@ function DatosPersonales({ socio, onGuardar }) {
       setDuplicado(repetido)
       return
     }
-    const huboCambios = onGuardar(valores, 'Datos personales')
-    setAviso(huboCambios ? 'Tus datos se actualizaron y el cambio quedó registrado.' : 'No hiciste ningún cambio.')
+    const resultado = onGuardar(valores, 'Datos personales')
+    setAviso(
+      resultado === 'pendiente'
+        ? 'Recibimos tu pedido. El cambio de nombre, DNI o fecha de nacimiento se aplica cuando el personal del club lo apruebe.'
+        : resultado
+          ? textoGuardado
+          : 'No hubo ningún cambio.',
+    )
     setEditando(false)
   }
 
@@ -72,6 +81,14 @@ function DatosPersonales({ socio, onGuardar }) {
         {aviso && (
           <Alert variant="success" dismissible onClose={() => setAviso('')} className="py-2">
             {aviso}
+          </Alert>
+        )}
+
+        {pendiente && (
+          <Alert variant="warning" className="small">
+            <strong>Cambio pendiente de aprobación.</strong> Pediste modificar:{' '}
+            {pendiente.cambios.map((c) => `${c.campo.toLowerCase()} de "${c.anterior}" a "${c.nuevo}"`).join('; ')}. Hasta que el personal lo apruebe, se siguen mostrando tus datos
+            actuales.
           </Alert>
         )}
 
@@ -103,7 +120,9 @@ function DatosPersonales({ socio, onGuardar }) {
                         if (duplicado === c.nombre) setDuplicado(null)
                       }}
                       isInvalid={invalido(c)}
+                      disabled={bloqueado(c.nombre)}
                     />
+                    {bloqueado(c.nombre) && <Form.Text>Tenés un cambio pendiente de aprobación.</Form.Text>}
                     <Form.Control.Feedback type="invalid">
                       {duplicado === c.nombre ? `Ya hay otro socio con este ${c.etiqueta.toLowerCase()}.` : c.mensaje}
                     </Form.Control.Feedback>
@@ -131,7 +150,7 @@ function DatosPersonales({ socio, onGuardar }) {
               ))}
             </Row>
             <Button variant="secondary" className="rounded-pill px-4 mt-4" onClick={empezar}>
-              Modificar mis datos
+              {textoEditar}
             </Button>
           </>
         )}

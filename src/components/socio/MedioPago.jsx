@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Row, Col, Button, Badge, Alert, Collapse, Form } from 'react-bootstrap'
 import { FaCreditCard } from 'react-icons/fa'
-import Tarjeta from './Tarjeta'
+import Tarjeta from '../common/Tarjeta'
 import OpcionPago from '../auth/OpcionPago'
 import DatosTarjeta from '../auth/DatosTarjeta'
 import { emisores, redesTarjeta } from '../../data/pagos'

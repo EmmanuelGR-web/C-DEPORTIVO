@@ -1,3 +1,5 @@
+import { usuariosDemo } from '../data/usuarios'
+
 const clave = 'sociosRegistrados'
 
 export const normalizarEmail = (email) => email.trim().toLowerCase()
@@ -46,6 +48,50 @@ export const validarSocio = async (email, contrasena) => {
   const socio = leerSocios().find((s) => s.email === normalizarEmail(email))
   if (!socio) return null
   return socio.contrasenaCifrada === (await cifrarContrasena(contrasena)) ? socio : null
+}
+
+// Los usuarios de prueba tienen su contraseña fija en el código; si se cambia o restablece,
+// la nueva huella se guarda aparte y tiene prioridad sobre la fija
+const claveDemo = 'contrasenasDemo'
+
+const leerContrasenasDemo = () => {
+  try {
+    return JSON.parse(localStorage.getItem(claveDemo)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+export const validarContrasenaDemo = async (usuario, contrasena) => {
+  const guardada = leerContrasenasDemo()[usuario.email]
+  return guardada ? guardada === (await cifrarContrasena(contrasena)) : usuario.contrasena === contrasena
+}
+
+// El socio de prueba entra siempre con el correo de usuarios de prueba, aunque cambie el de contacto
+const usuarioSocioDemo = () => usuariosDemo.find((u) => u.rol === 'socio')
+
+const guardarContrasena = async (perfil, nueva, extra = {}) => {
+  const contrasenaCifrada = await cifrarContrasena(nueva)
+  if (perfil.esRegistrado) return actualizarSocio(perfil.id, { contrasenaCifrada, ...extra })
+  try {
+    localStorage.setItem(claveDemo, JSON.stringify({ ...leerContrasenasDemo(), [usuarioSocioDemo().email]: contrasenaCifrada }))
+    const guardados = JSON.parse(localStorage.getItem('socioDemoEditado')) ?? {}
+    localStorage.setItem('socioDemoEditado', JSON.stringify({ ...guardados, ...extra }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+// El personal restablece la contraseña al número de DNI; el socio después la puede cambiar
+export const restablecerContrasena = (perfil) => guardarContrasena(perfil, normalizarDni(perfil.dni), { debeCambiarContrasena: true })
+
+export const cambiarContrasena = async (perfil, actual, nueva) => {
+  const correcta = perfil.esRegistrado
+    ? leerSocios().find((s) => s.id === perfil.id)?.contrasenaCifrada === (await cifrarContrasena(actual))
+    : await validarContrasenaDemo(usuarioSocioDemo(), actual)
+  if (!correcta) return 'actual'
+  return (await guardarContrasena(perfil, nueva, { debeCambiarContrasena: false })) ? 'ok' : 'error'
 }
 
 export const actualizarSocio = (id, cambios) => {

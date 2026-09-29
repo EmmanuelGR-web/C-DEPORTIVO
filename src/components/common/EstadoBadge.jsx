@@ -7,6 +7,8 @@ const estilos = {
   Pendiente: { bg: 'warning', texto: 'dark' },
   'En validación': { bg: 'warning', texto: 'dark' },
   Rechazado: { bg: 'danger' },
+  Vencido: { bg: 'danger' },
+  'En revisión': { bg: 'info', texto: 'dark' },
   Inactivo: { bg: 'secondary' },
 }
 

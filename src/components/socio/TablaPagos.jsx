@@ -41,9 +41,21 @@ function TablaPagos({ pagos, orden, onOrdenar }) {
             <td className="text-nowrap">{pago.fecha}</td>
             <td>{pago.concepto}</td>
             <td className="text-nowrap">{pago.medio}</td>
-            <td className="text-nowrap">{formatearPesos(pago.monto)}</td>
+            <td className="text-nowrap">
+              {formatearPesos(pago.monto)}
+              {pago.recargo > 0 && (
+                <div className="small text-danger">
+                  Incluye {formatearPesos(pago.recargo)} de recargo ({pago.diasDemora} {pago.diasDemora === 1 ? 'día' : 'días'})
+                </div>
+              )}
+            </td>
             <td>
               <EstadoBadge estado={pago.estado} />
+              {pago.comprobante && (
+                <a href={pago.comprobante.dataUrl} download={pago.comprobante.nombre} className="d-block small link-secondary mt-1">
+                  Ver comprobante
+                </a>
+              )}
             </td>
           </tr>
         ))}

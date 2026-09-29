@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Form, Button, Alert, Badge } from 'react-bootstrap'
-import { leerAdjunto, maximoAdjuntos, tamanioLegible } from '../../utils/mensajes'
+import { leerAdjunto, maximoAdjuntos, tamanioLegible, textoLimite } from '../../utils/mensajes'
 
 function Redactor({ id, conAsunto = false, textoBoton = 'Enviar', onEnviar, onCancelar }) {
   const [asunto, setAsunto] = useState('')
@@ -87,7 +87,7 @@ function Redactor({ id, conAsunto = false, textoBoton = 'Enviar', onEnviar, onCa
           Adjuntar archivo
           <input type="file" multiple onChange={adjuntar} className="visually-hidden" />
         </label>
-        <small className="text-body-secondary">Hasta {maximoAdjuntos} archivos de 1 MB</small>
+        <small className="text-body-secondary">Hasta {maximoAdjuntos} archivos · {textoLimite}</small>
         {onCancelar && (
           <Button variant="link" size="sm" className="ms-auto" onClick={onCancelar}>
             Cancelar

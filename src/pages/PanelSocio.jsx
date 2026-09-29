@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Row, Col, Button } from 'react-bootstrap'
+import { useCallback, useState } from 'react'
+import { useDatosEnVivo } from '../hooks/useDatosEnVivo'
+import { Row, Col, Button, Alert } from 'react-bootstrap'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import { useSesion } from '../hooks/useSesion'
 import PanelLayout from '../components/layout/PanelLayout'
@@ -10,36 +11,50 @@ import MedioPago from '../components/socio/MedioPago'
 import Beneficios from '../components/socio/Beneficios'
 import DatosPersonales from '../components/socio/DatosPersonales'
 import FotoPerfil from '../components/socio/FotoPerfil'
+import CambiarContrasena from '../components/socio/CambiarContrasena'
+import InformarPago from '../components/socio/InformarPago'
 import Bandeja from '../components/socio/Bandeja'
-import Tarjeta from '../components/socio/Tarjeta'
+import Tarjeta from '../components/common/Tarjeta'
 import { menuSocio } from '../data/menus'
 import { beneficios } from '../data/socio'
 import { perfilSocio, guardarCambiosSocio } from '../utils/perfilSocio'
 import { leerHilos, guardarHilos } from '../utils/mensajes'
 import { descargarCredencial } from '../utils/pdf'
+import { guardarInforme } from '../utils/cuotas'
+import { formatearPesos } from '../utils/carnet'
 
 const titulos = { resumen: 'Mi resumen', datos: 'Datos personales', pagos: 'Facturas y pagos', bandeja: 'Bandeja de entrada' }
 
 function PanelSocio() {
   useTituloPagina('Panel del socio')
   const { usuario } = useSesion()
-  const [socio, setSocio] = useState(() => perfilSocio(usuario))
-  const [hilos, setHilos] = useState(() => leerHilos(socio))
+  const leer = useCallback(() => {
+    const perfil = perfilSocio(usuario)
+    return { socio: perfil, hilos: leerHilos(perfil) }
+  }, [usuario])
+  const [{ socio, hilos }, recargar, actualizado] = useDatosEnVivo(leer)
   const [seccion, setSeccion] = useState('resumen')
   const [descargando, setDescargando] = useState(false)
 
   const sinLeer = hilos.filter((h) => !h.leido).length
   const items = menuSocio.map((item) => (item.id === 'bandeja' ? { ...item, contador: sinLeer } : item))
+  const cuotaAbierta = socio.pagos.find((p) => ['Pendiente', 'Vencido', 'En revisión'].includes(p.estado))
 
   const guardarCambios = (cambios, seccionCambiada) => {
     const huboCambios = guardarCambiosSocio(socio, cambios, seccionCambiada)
-    if (huboCambios) setSocio(perfilSocio(usuario))
+    if (huboCambios) recargar()
     return huboCambios
+  }
+
+  const informarPago = (cuota, datos) => {
+    const guardado = guardarInforme(socio.id, cuota.periodo, { ...datos, vence: cuota.vence, estado: 'En revisión', informadoEl: new Date().toISOString() })
+    if (guardado) recargar()
+    return guardado
   }
 
   const cambiarHilos = (nuevos) => {
     const guardado = guardarHilos(socio.id, nuevos)
-    if (guardado) setHilos(nuevos)
+    if (guardado) recargar()
     return guardado
   }
 
@@ -57,9 +72,29 @@ function PanelSocio() {
       items={items}
       activo={seccion}
       onSeleccionar={setSeccion}
+      onActualizar={recargar}
+      actualizado={actualizado}
     >
       {seccion === 'resumen' && (
         <>
+          {socio.debeCambiarContrasena && (
+            <Alert variant="warning" className="d-flex flex-wrap align-items-center gap-2">
+              Tu contraseña actual es tu número de DNI. Te recomendamos cambiarla por una propia.
+              <Button size="sm" variant="secondary" className="rounded-pill ms-auto" onClick={() => setSeccion('datos')}>
+                Cambiarla ahora
+              </Button>
+            </Alert>
+          )}
+          {cuotaAbierta && cuotaAbierta.estado !== 'En revisión' && (
+            <Alert variant={cuotaAbierta.estado === 'Vencido' ? 'danger' : 'warning'} className="d-flex flex-wrap align-items-center gap-2">
+              {cuotaAbierta.estado === 'Vencido'
+                ? `Tu cuota ${cuotaAbierta.fecha} está vencida: ${formatearPesos(cuotaAbierta.monto)} con recargo por ${cuotaAbierta.diasDemora} días de demora.`
+                : `Tenés la cuota ${cuotaAbierta.fecha} pendiente: ${formatearPesos(cuotaAbierta.monto)}. Vence el día 15.`}
+              <Button size="sm" variant="secondary" className="rounded-pill ms-auto" onClick={() => setSeccion('pagos')}>
+                Informar pago
+              </Button>
+            </Alert>
+          )}
           <Row className="g-4 mb-4">
             <Col xl={5}>
               <EstadoMembresia socio={socio} />
@@ -85,11 +120,15 @@ function PanelSocio() {
         <>
           <FotoPerfil socio={socio} onGuardar={guardarCambios} />
           <DatosPersonales socio={socio} onGuardar={guardarCambios} />
+          <div className="mt-4">
+            <CambiarContrasena socio={socio} onCambiada={recargar} />
+          </div>
         </>
       )}
 
       {seccion === 'pagos' && (
         <>
+          {cuotaAbierta && <InformarPago key={cuotaAbierta.periodo + cuotaAbierta.estado} cuota={cuotaAbierta} onInformar={informarPago} />}
           <MedioPago socio={socio} onGuardar={guardarCambios} />
           <Tarjeta titulo="Historial de pagos">
             <PagosFiltrables socio={socio} />
