@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Row, Col, Form, Button, Alert, Collapse } from 'react-bootstrap'
+import { Row, Col, Form, Button, Alert, Collapse, Spinner } from 'react-bootstrap'
 import Tarjeta from '../common/Tarjeta'
 import { formatearPesos } from '../../utils/carnet'
 import { calcularCuota, diaVencimiento, interesDiario } from '../../utils/cuotas'
 import { leerAdjunto, tamanioLegible, textoLimite } from '../../utils/mensajes'
+import { leerConIA, montosCoinciden } from '../../utils/lecturaIA'
+
+const medios = ['Transferencia', 'Billetera virtual', 'Depósito', 'Efectivo']
 
 const hoyISO = () => new Date().toISOString().slice(0, 10)
 const nombreMes = (periodo) => new Date(`${periodo}-01T12:00:00`).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
@@ -15,6 +18,7 @@ function InformarPago({ cuota, onInformar }) {
   const [comprobante, setComprobante] = useState(null)
   const [error, setError] = useState('')
   const [validado, setValidado] = useState(false)
+  const [lectura, setLectura] = useState(null)
 
   const [anio, mes] = cuota.periodo.split('-').map(Number)
   const segunFecha = calcularCuota(cuota.base, anio, mes - 1, new Date(`${fechaPago}T12:00:00`), new Date(cuota.vence))
@@ -28,18 +32,48 @@ function InformarPago({ cuota, onInformar }) {
       setError('El comprobante tiene que ser una imagen o un PDF.')
       return
     }
+    let adjunto
     try {
-      setComprobante(await leerAdjunto(archivo))
+      adjunto = await leerAdjunto(archivo)
+      setComprobante(adjunto)
     } catch (problema) {
       setError(problema.message)
+      return
+    }
+    setLectura({ estado: 'leyendo' })
+    try {
+      const leido = await leerConIA('comprobante', [{ dataUrl: adjunto.dataUrl }], { hoy: hoyISO() })
+      setLectura({ estado: 'lista', ...leido })
+      if (leido.fecha && leido.fecha <= hoyISO()) setFechaPago(leido.fecha)
+      if (medios.includes(leido.medio)) setMedio(leido.medio)
+    } catch (problema) {
+      setLectura({ estado: 'error', mensaje: problema.message })
     }
   }
+
+  const coincide = lectura?.estado === 'lista' && montosCoinciden(lectura.monto, segunFecha.total)
 
   const enviar = (e) => {
     e.preventDefault()
     setValidado(true)
     if (!comprobante || !fechaPago || fechaPago > hoyISO()) return
-    const guardado = onInformar(cuota, { fechaPago, medio, comprobante, monto: segunFecha.total })
+    const verificacionIA =
+      lectura?.estado === 'lista'
+        ? {
+            leido: true,
+            esComprobante: lectura.esComprobante,
+            monto: lectura.monto,
+            fecha: lectura.fecha,
+            numeroOperacion: lectura.numeroOperacion,
+            origen: lectura.origen,
+            destino: lectura.destino,
+            observaciones: lectura.observaciones,
+            montoEsperado: segunFecha.total,
+            coincideMonto: coincide,
+            coincideFecha: lectura.fecha === fechaPago,
+          }
+        : { leido: false, motivo: lectura?.mensaje ?? '' }
+    const guardado = onInformar(cuota, { fechaPago, medio, comprobante, monto: segunFecha.total, verificacionIA })
     if (!guardado) setError('No pudimos guardar el comprobante en este navegador.')
   }
 
@@ -52,7 +86,8 @@ function InformarPago({ cuota, onInformar }) {
           </div>
           {cuota.recargo > 0 ? (
             <p className="small text-danger mb-0">
-              Cuota {formatearPesos(cuota.base)} + {formatearPesos(cuota.recargo)} de recargo por {cuota.diasDemora} {cuota.diasDemora === 1 ? 'día' : 'días'} de demora.
+              Cuota {formatearPesos(cuota.base)} + {formatearPesos(cuota.recargo)} de recargo por {cuota.diasDemora} {cuota.diasDemora === 1 ? 'día' : 'días'}{' '}
+              de demora.
             </p>
           ) : (
             <p className="small text-body-secondary mb-0">Sin recargo si pagás hasta el {diaVencimiento} de este mes.</p>
@@ -102,8 +137,9 @@ function InformarPago({ cuota, onInformar }) {
                 <Form.Group controlId="pago-medio">
                   <Form.Label className="small fw-semibold">Cómo pagaste</Form.Label>
                   <Form.Select value={medio} onChange={(e) => setMedio(e.target.value)}>
-                    <option>Transferencia</option>
-                    <option>Efectivo</option>
+                    {medios.map((m) => (
+                      <option key={m}>{m}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -120,6 +156,43 @@ function InformarPago({ cuota, onInformar }) {
                 </Form.Group>
               </Col>
             </Row>
+            {lectura?.estado === 'leyendo' && (
+              <div className="d-flex align-items-center gap-2 small mt-3" role="status">
+                <Spinner animation="border" size="sm" variant="secondary" /> La IA está leyendo tu comprobante…
+              </div>
+            )}
+            {lectura?.estado === 'error' && (
+              <Alert variant="light" className="small mt-3 mb-0 border">
+                No se pudo leer el comprobante automáticamente ({lectura.mensaje}). Completá los datos a mano: el personal lo revisa igual.
+              </Alert>
+            )}
+            {lectura?.estado === 'lista' && (
+              <div
+                className={`rounded-4 p-3 mt-3 small border ${!lectura.esComprobante ? 'bg-warning-subtle border-warning' : coincide ? 'bg-success-subtle border-success' : 'bg-danger-subtle border-danger'}`}
+              >
+                <div className="fw-bold mb-1">
+                  {!lectura.esComprobante
+                    ? 'El archivo no parece un comprobante de pago.'
+                    : coincide
+                      ? 'Leído por IA: el monto coincide con tu cuota.'
+                      : 'Leído por IA: el monto no coincide con tu cuota.'}
+                </div>
+                {lectura.esComprobante && (
+                  <div>
+                    Monto {lectura.monto !== null ? formatearPesos(lectura.monto) : 'no legible'}
+                    {lectura.fecha && ` · ${new Date(`${lectura.fecha}T12:00:00`).toLocaleDateString('es-AR')}`}
+                    {lectura.numeroOperacion && ` · Operación ${lectura.numeroOperacion}`}
+                    {lectura.origen && ` · ${lectura.origen}`}
+                  </div>
+                )}
+                {lectura.esComprobante && !coincide && (
+                  <div className="mt-1">
+                    A la fecha del pago, tu cuota es de {formatearPesos(segunFecha.total)}. Podés enviarlo igual: el personal lo va a revisar.
+                  </div>
+                )}
+                <div className="text-body-secondary mt-1">Completamos la fecha y el medio con lo que leímos. Revisalos antes de enviar.</div>
+              </div>
+            )}
             {error && (
               <Alert variant="warning" className="small mt-3 mb-0">
                 {error}
@@ -130,7 +203,7 @@ function InformarPago({ cuota, onInformar }) {
                 Monto a esa fecha: <strong>{formatearPesos(segunFecha.total)}</strong>
                 {segunFecha.recargo > 0 && ` (incluye ${formatearPesos(segunFecha.recargo)} de recargo)`}
               </span>
-              <Button type="submit" variant="secondary" className="rounded-pill px-4 ms-auto">
+              <Button type="submit" variant="secondary" className="rounded-pill px-4 ms-auto" disabled={lectura?.estado === 'leyendo'}>
                 Enviar comprobante
               </Button>
             </div>

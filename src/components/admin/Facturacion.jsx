@@ -98,6 +98,11 @@ function Facturacion({ perfiles, autor, onAbrirFicha }) {
                       Ver comprobante
                     </a>
                   )}
+                  {pago.informe?.verificacionIA?.leido && (
+                    <div className={`small ${pago.informe.verificacionIA.coincideMonto ? 'text-success' : 'text-danger'}`}>
+                      IA: {pago.informe.verificacionIA.coincideMonto ? 'monto coincide' : 'monto no coincide'}
+                    </div>
+                  )}
                 </td>
                 <td className="text-end">
                   <Button size="sm" variant="outline-secondary" className="rounded-pill px-3 text-nowrap" onClick={() => onAbrirFicha(perfil.id)}>

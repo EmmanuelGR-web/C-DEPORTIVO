@@ -9,7 +9,9 @@ import CampoContrasena from './CampoContrasena'
 import DatosTarjeta from './DatosTarjeta'
 import { contactoClub } from '../../data/club'
 import { erroresTarjeta, resumirTarjeta, revisarNumeroTarjeta, tarjetaVacia } from '../../utils/tarjetas'
-import { leerDni } from '../../utils/leerDni'
+import { camposCorregidos, leerConIA } from '../../utils/lecturaIA'
+import { leerAdjunto } from '../../utils/mensajes'
+import { formatearFechaConAnio } from '../../utils/fechas'
 import { buscarDuplicado, guardarSocio } from '../../utils/socios'
 import { tarjetaVidrio } from './estilosAuth'
 
@@ -21,14 +23,36 @@ const edadValida = (fecha) => {
 
 const camposDni = [
   { nombre: 'nombre', etiqueta: 'Nombre completo', autoComplete: 'name', valido: (v) => v.trim().length >= 3, mensaje: 'Ingresá tu nombre y apellido.' },
-  { nombre: 'dni', etiqueta: 'Número de DNI', inputMode: 'numeric', valido: (v) => /^\d{7,8}$/.test(v.replace(/\./g, '')), mensaje: 'El DNI tiene 7 u 8 números.' },
+  {
+    nombre: 'dni',
+    etiqueta: 'Número de DNI',
+    inputMode: 'numeric',
+    valido: (v) => /^\d{7,8}$/.test(v.replace(/\./g, '')),
+    mensaje: 'El DNI tiene 7 u 8 números.',
+  },
   { nombre: 'fechaNacimiento', etiqueta: 'Fecha de nacimiento', tipo: 'date', valido: edadValida, mensaje: 'Ingresá una fecha de nacimiento válida.' },
   { nombre: 'direccion', etiqueta: 'Dirección', autoComplete: 'street-address', valido: (v) => v.trim().length >= 5, mensaje: 'Ingresá tu dirección.' },
 ]
 
 const camposContacto = [
-  { nombre: 'telefono', etiqueta: 'Teléfono de contacto', tipo: 'tel', autoComplete: 'tel', ejemplo: '381 555-1234', valido: (v) => v.replace(/\D/g, '').length >= 8, mensaje: 'Ingresá un teléfono válido.' },
-  { nombre: 'email', etiqueta: 'Correo electrónico', tipo: 'email', autoComplete: 'email', ejemplo: 'nombre@correo.com', valido: (v) => /^\S+@\S+\.\S+$/.test(v), mensaje: 'Ingresá un correo electrónico válido.' },
+  {
+    nombre: 'telefono',
+    etiqueta: 'Teléfono de contacto',
+    tipo: 'tel',
+    autoComplete: 'tel',
+    ejemplo: '381 555-1234',
+    valido: (v) => v.replace(/\D/g, '').length >= 8,
+    mensaje: 'Ingresá un teléfono válido.',
+  },
+  {
+    nombre: 'email',
+    etiqueta: 'Correo electrónico',
+    tipo: 'email',
+    autoComplete: 'email',
+    ejemplo: 'nombre@correo.com',
+    valido: (v) => /^\S+@\S+\.\S+$/.test(v),
+    mensaje: 'Ingresá un correo electrónico válido.',
+  },
 ]
 
 const mediosPago = [
@@ -75,6 +99,8 @@ function FormularioRegistro() {
   const [selfie, setSelfie] = useState(null)
   const [lectura, setLectura] = useState('pendiente')
   const [leidos, setLeidos] = useState({})
+  const [lecturaIA, setLecturaIA] = useState(null)
+  const [avisoLectura, setAvisoLectura] = useState('')
   const [pago, setPago] = useState('')
   const [tarjeta, setTarjeta] = useState(tarjetaVacia)
   const [terminos, setTerminos] = useState(false)
@@ -88,19 +114,44 @@ function FormularioRegistro() {
     if (campo === duplicado) setDuplicado(null)
   }
 
-  const leerDocumento = () => {
+  const leerDocumento = async ({ frente, dorso }) => {
     setLectura('leyendo')
-    leerDni().then((resultado) => {
-      setLeidos(resultado)
-      setDatos((actual) => ({ ...actual, ...resultado }))
+    setAvisoLectura('')
+    try {
+      const resultado = await leerConIA('dni', [{ dataUrl: frente }, { dataUrl: dorso }])
+      if (!resultado.esDni) {
+        setAvisoLectura('Las fotos no parecen de un DNI argentino. Probá con otras o completá tus datos a mano.')
+        setLectura('error')
+        return
+      }
+      const encontrados = Object.fromEntries(['nombre', 'dni', 'fechaNacimiento', 'direccion'].filter((c) => resultado[c]).map((c) => [c, resultado[c]]))
+      setLeidos(encontrados)
+      setDatos((actual) => ({ ...actual, ...encontrados }))
+      setLecturaIA({ fecha: new Date().toISOString(), leidos: encontrados, vencimiento: resultado.vencimiento, observaciones: resultado.observaciones })
+      const avisos = [
+        !resultado.legible && 'Algunos datos no se leyeron bien: revisalos.',
+        resultado.vencimiento &&
+          resultado.vencimiento < new Date().toISOString().slice(0, 10) &&
+          `Tu DNI figura vencido desde el ${formatearFechaConAnio(resultado.vencimiento)}.`,
+        resultado.observaciones,
+      ].filter(Boolean)
+      setAvisoLectura(avisos.join(' '))
       setLectura('lista')
-    })
+    } catch (problema) {
+      setAvisoLectura(`${problema.message} Completá tus datos a mano.`)
+      setLectura('error')
+    }
   }
 
-  const elegirImagen = (campo) => (url) => {
-    const nuevas = { ...imagenes, [campo]: url }
-    setImagenes(nuevas)
-    if (nuevas.frente && nuevas.dorso) leerDocumento()
+  const elegirImagen = (campo) => async (archivo) => {
+    try {
+      const { dataUrl } = await leerAdjunto(archivo)
+      const nuevas = { ...imagenes, [campo]: dataUrl }
+      setImagenes(nuevas)
+      if (nuevas.frente && nuevas.dorso) leerDocumento(nuevas)
+    } catch (problema) {
+      setAvisoLectura(problema.message)
+    }
   }
 
   const errores = {
@@ -133,7 +184,19 @@ function FormularioRegistro() {
       return
     }
     const { nombre, dni, fechaNacimiento, direccion, telefono, email } = datos
-    const socio = await guardarSocio({ nombre, dni, fechaNacimiento, direccion, telefono, email, contrasena: datos.contrasena, foto: selfie, fotoActualizada: new Date().toISOString(), medioPago: armarMedioPago() })
+    const socio = await guardarSocio({
+      nombre,
+      dni,
+      fechaNacimiento,
+      direccion,
+      telefono,
+      email,
+      contrasena: datos.contrasena,
+      foto: selfie,
+      fotoActualizada: new Date().toISOString(),
+      medioPago: armarMedioPago(),
+      lecturaIA: lecturaIA && { ...lecturaIA, corregidos: camposCorregidos(lecturaIA.leidos, datos) },
+    })
     if (!socio) {
       setErrorGuardado(true)
       return
@@ -179,14 +242,32 @@ function FormularioRegistro() {
             <Titulo>1. Verificación de identidad *</Titulo>
             <Row className="g-3 mb-2">
               <Col xs={6}>
-                <SubirImagen id="dni-frente" etiqueta="Frente del DNI" icono={FaIdCard} vista={imagenes.frente} onElegir={elegirImagen('frente')} invalido={marcar('frente')} />
+                <SubirImagen
+                  id="dni-frente"
+                  etiqueta="Frente del DNI"
+                  icono={FaIdCard}
+                  vista={imagenes.frente}
+                  onElegir={elegirImagen('frente')}
+                  invalido={marcar('frente')}
+                />
               </Col>
               <Col xs={6}>
-                <SubirImagen id="dni-dorso" etiqueta="Dorso del DNI" icono={FaIdCard} vista={imagenes.dorso} onElegir={elegirImagen('dorso')} invalido={marcar('dorso')} />
+                <SubirImagen
+                  id="dni-dorso"
+                  etiqueta="Dorso del DNI"
+                  icono={FaIdCard}
+                  vista={imagenes.dorso}
+                  onElegir={elegirImagen('dorso')}
+                  invalido={marcar('dorso')}
+                />
               </Col>
             </Row>
             <p className="small text-white-50 mb-4">
-              {lectura === 'lista' ? '✓ Datos leídos. Revisalos a la derecha.' : 'Con las dos fotos, la IA completa tus datos personales.'}
+              {lectura === 'lista'
+                ? '✓ Datos leídos. Revisalos a la derecha.'
+                : lectura === 'error'
+                  ? 'No se pudo completar la lectura automática.'
+                  : 'Con las dos fotos, la IA lee tu DNI y completa tus datos personales.'}
             </p>
 
             <Titulo>2. Foto de perfil *</Titulo>
@@ -235,22 +316,49 @@ function FormularioRegistro() {
             {lectura === 'leyendo' && (
               <div className="text-center py-5" role="status">
                 <Spinner animation="grow" variant="warning" className="mb-3" />
-                <p className="mb-0">Extrayendo datos …</p>
+                <p className="mb-0">La IA está leyendo tu DNI…</p>
               </div>
             )}
 
-            {lectura === 'lista' && (
+            {['lista', 'error'].includes(lectura) && (
               <>
-                <Alert variant="light" className="small py-2 d-flex align-items-center gap-2">
-                  <FaMagic className="text-warning flex-shrink-0" aria-hidden="true" />
-                  Completamos estos datos con tu DNI. Si alguno está mal, podés corregirlo.
-                </Alert>
+                {lectura === 'lista' && (
+                  <Alert variant="light" className="small py-2 d-flex align-items-center gap-2">
+                    <FaMagic className="text-warning flex-shrink-0" aria-hidden="true" />
+                    Completamos estos datos con tu DNI. Si alguno está mal, podés corregirlo.
+                  </Alert>
+                )}
+                {avisoLectura && (
+                  <Alert variant="warning" className="small py-2 d-flex flex-wrap align-items-center gap-2">
+                    {avisoLectura}
+                    {lectura === 'error' && imagenes.frente && imagenes.dorso && (
+                      <Button size="sm" variant="dark" className="rounded-pill ms-auto" onClick={() => leerDocumento(imagenes)}>
+                        Reintentar lectura
+                      </Button>
+                    )}
+                  </Alert>
+                )}
 
                 {camposDni.map((campo) => (
-                  <CampoTexto key={campo.nombre} campo={campo} valor={datos[campo.nombre]} onCambiar={cambiar} invalido={marcar(campo.nombre)} leido={leidos[campo.nombre]} mensaje={duplicado === campo.nombre ? `Ya hay un socio registrado con este ${campo.etiqueta.toLowerCase()}.` : undefined} />
+                  <CampoTexto
+                    key={campo.nombre}
+                    campo={campo}
+                    valor={datos[campo.nombre]}
+                    onCambiar={cambiar}
+                    invalido={marcar(campo.nombre)}
+                    leido={leidos[campo.nombre]}
+                    mensaje={duplicado === campo.nombre ? `Ya hay un socio registrado con este ${campo.etiqueta.toLowerCase()}.` : undefined}
+                  />
                 ))}
                 {camposContacto.map((campo) => (
-                  <CampoTexto key={campo.nombre} campo={campo} valor={datos[campo.nombre]} onCambiar={cambiar} invalido={marcar(campo.nombre)} mensaje={duplicado === campo.nombre ? `Ya hay un socio registrado con este ${campo.etiqueta.toLowerCase()}.` : undefined} />
+                  <CampoTexto
+                    key={campo.nombre}
+                    campo={campo}
+                    valor={datos[campo.nombre]}
+                    onCambiar={cambiar}
+                    invalido={marcar(campo.nombre)}
+                    mensaje={duplicado === campo.nombre ? `Ya hay un socio registrado con este ${campo.etiqueta.toLowerCase()}.` : undefined}
+                  />
                 ))}
 
                 <Row className="g-md-3">

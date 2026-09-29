@@ -31,6 +31,7 @@ export const listarSolicitudes = () => {
       detalle: `Se registró desde la web con pago en ${s.medioPago?.tipo === 'tarjeta' ? 'tarjeta' : 'efectivo'}.`,
       cambios: [],
       foto: s.foto,
+      lecturaIA: s.lecturaIA ?? null,
       estadoInicial: s.estado === 'Activo' ? 'Autorizado' : 'Pendiente',
     }))
 
@@ -54,6 +55,13 @@ export const listarSolicitudes = () => {
       estadoInicial: { Autorizado: 'Autorizado', Rechazado: 'Rechazado' }[r.resuelto],
     }))
 
+  const operaciones = perfiles.flatMap((perfil) =>
+    Object.entries(leerInformes(perfil.id))
+      .map(([periodo, informe]) => ({ clave: `${perfil.id}-${periodo}`, numero: informe.verificacionIA?.numeroOperacion?.replace(/\D/g, '') }))
+      .filter((o) => o.numero),
+  )
+  const repetida = (clave, numero) => Boolean(numero) && operaciones.some((o) => o.numero === numero && o.clave !== clave)
+
   const comprobantes = perfiles.flatMap((perfil) =>
     Object.entries(leerInformes(perfil.id)).map(([periodo, informe]) => {
       const [anio, mes] = periodo.split('-')
@@ -71,6 +79,8 @@ export const listarSolicitudes = () => {
         } Verificá que el comprobante coincida con la fecha y el monto.`,
         cambios: [],
         comprobante: informe.comprobante,
+        verificacionIA: informe.verificacionIA ?? null,
+        operacionRepetida: repetida(`${perfil.id}-${periodo}`, informe.verificacionIA?.numeroOperacion?.replace(/\D/g, '')),
         periodo,
         informe,
         estadoInicial: { Aprobado: 'Autorizado', Rechazado: 'Rechazado' }[informe.estado] ?? 'Pendiente',
