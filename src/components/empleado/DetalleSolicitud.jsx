@@ -1,8 +1,76 @@
 import { useState } from 'react'
 import { Modal, Button, Form, Alert } from 'react-bootstrap'
 import EstadoBadge from '../common/EstadoBadge'
+import { formatearPesos } from '../../utils/carnet'
+import { formatearFechaConAnio } from '../../utils/fechas'
 
 const fechaHora = (iso) => new Date(iso).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' })
+const fecha = (dia) => (dia ? new Date(`${dia}T12:00:00`).toLocaleDateString('es-AR') : 'no legible')
+const nombresCampo = { nombre: 'Nombre', dni: 'DNI', fechaNacimiento: 'Fecha de nacimiento', direccion: 'Domicilio' }
+
+function LecturaDni({ lectura }) {
+  const vencido = lectura.vencimiento && lectura.vencimiento < new Date(lectura.fecha).toISOString().slice(0, 10)
+  return (
+    <div className="bg-body-tertiary rounded-4 p-3 mb-3 small">
+      <div className="fw-bold text-uppercase text-secondary mb-2">DNI leído por IA</div>
+      {Object.entries(lectura.leidos).map(([campo, valor]) => (
+        <div key={campo} className="mb-1">
+          <strong>{nombresCampo[campo]}:</strong> {campo === 'fechaNacimiento' ? formatearFechaConAnio(valor) : valor}
+          {lectura.corregidos?.includes(campo) && <span className="badge rounded-pill bg-warning text-dark ms-2">El socio lo corrigió</span>}
+        </div>
+      ))}
+      {lectura.vencimiento && (
+        <div className={vencido ? 'text-danger fw-semibold' : ''}>
+          Vencimiento del DNI: {formatearFechaConAnio(lectura.vencimiento)}
+          {vencido && ' (vencido)'}
+        </div>
+      )}
+      {lectura.observaciones && <div className="text-body-secondary mt-1">Observaciones de la IA: {lectura.observaciones}</div>}
+      <div className="mt-2">
+        {lectura.corregidos?.length ? 'Compará los datos corregidos con las fotos del DNI antes de autorizar.' : 'El socio no corrigió ningún dato leído.'}
+      </div>
+    </div>
+  )
+}
+
+function VerificacionComprobante({ verificacion: v, repetida }) {
+  if (!v.leido) {
+    return (
+      <Alert variant="light" className="small border">
+        No se pudo leer con IA{v.motivo ? `: ${v.motivo}` : '.'} Revisalo a mano.
+      </Alert>
+    )
+  }
+  const bien = v.esComprobante && v.coincideMonto && !repetida
+  return (
+    <Alert variant={repetida ? 'danger' : bien ? 'success' : 'warning'} className="small">
+      <div className="fw-bold mb-1">
+        {repetida
+          ? 'Atención: este número de operación ya figura en otro comprobante.'
+          : !v.esComprobante
+            ? 'La IA no reconoce el archivo como un comprobante de pago.'
+            : v.coincideMonto
+              ? 'Verificado por IA: el monto coincide con la cuota.'
+              : 'Verificado por IA: el monto no coincide con la cuota.'}
+      </div>
+      {v.esComprobante && (
+        <>
+          <div>
+            Monto leído {v.monto !== null ? formatearPesos(v.monto) : 'no legible'} · esperado {formatearPesos(v.montoEsperado)}
+          </div>
+          <div>
+            Fecha leída {fecha(v.fecha)}
+            {!v.coincideFecha && ' · no coincide con la fecha que informó el socio'}
+          </div>
+          {v.numeroOperacion && <div>Operación N° {v.numeroOperacion}</div>}
+          {v.origen && <div>Origen: {v.origen}</div>}
+          {v.destino && <div>Destino: {v.destino}</div>}
+        </>
+      )}
+      {v.observaciones && <div className="mt-1">Observaciones de la IA: {v.observaciones}</div>}
+    </Alert>
+  )
+}
 
 function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
   const [rechazando, setRechazando] = useState(false)
@@ -36,7 +104,13 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
           <Modal.Body>
             <div className="d-flex flex-wrap gap-4 mb-3">
               {solicitud.foto && (
-                <img src={solicitud.foto} alt={`Foto de ${solicitud.socioNombre}`} width={110} height={110} className="rounded-4 object-fit-cover border border-3 border-secondary" />
+                <img
+                  src={solicitud.foto}
+                  alt={`Foto de ${solicitud.socioNombre}`}
+                  width={110}
+                  height={110}
+                  className="rounded-4 object-fit-cover border border-3 border-secondary"
+                />
               )}
               <dl className="mb-0 flex-grow-1">
                 {solicitud.socioDni && (
@@ -56,12 +130,20 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
 
             <p>{solicitud.detalle}</p>
 
+            {solicitud.lecturaIA && <LecturaDni lectura={solicitud.lecturaIA} />}
+            {solicitud.verificacionIA && <VerificacionComprobante verificacion={solicitud.verificacionIA} repetida={solicitud.operacionRepetida} />}
+
             {solicitud.tipo === 'Comprobante de pago' && (
               <div className="bg-body-tertiary rounded-4 p-3 mb-3">
                 <div className="small fw-bold text-uppercase text-secondary mb-2">Comprobante enviado</div>
                 {!solicitud.comprobante && <p className="small text-body-secondary mb-0">Solicitud de ejemplo, sin archivo adjunto.</p>}
                 {solicitud.comprobante?.tipo.startsWith('image/') && (
-                  <button type="button" className="d-block w-100 p-0 border-0 bg-transparent mb-2" onClick={() => setAmpliado(!ampliado)} aria-label={ampliado ? 'Achicar comprobante' : 'Ver comprobante en tamaño completo'}>
+                  <button
+                    type="button"
+                    className="d-block w-100 p-0 border-0 bg-transparent mb-2"
+                    onClick={() => setAmpliado(!ampliado)}
+                    aria-label={ampliado ? 'Achicar comprobante' : 'Ver comprobante en tamaño completo'}
+                  >
                     <img
                       src={solicitud.comprobante.dataUrl}
                       alt="Comprobante de pago"
@@ -71,7 +153,13 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
                   </button>
                 )}
                 {solicitud.comprobante?.tipo === 'application/pdf' && (
-                  <object data={solicitud.comprobante.dataUrl} type="application/pdf" className="w-100 rounded-3 border mb-2" style={{ height: 420 }} aria-label="Comprobante en PDF">
+                  <object
+                    data={solicitud.comprobante.dataUrl}
+                    type="application/pdf"
+                    className="w-100 rounded-3 border mb-2"
+                    style={{ height: 420 }}
+                    aria-label="Comprobante en PDF"
+                  >
                     <p className="small mb-0">Tu navegador no muestra PDF acá: descargalo para verlo.</p>
                   </object>
                 )}

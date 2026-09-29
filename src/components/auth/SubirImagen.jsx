@@ -1,7 +1,8 @@
 function SubirImagen({ id, etiqueta, icono: Icono, vista, onElegir, invalido }) {
   const cambiar = (e) => {
     const archivo = e.target.files[0]
-    if (archivo) onElegir(URL.createObjectURL(archivo))
+    e.target.value = ''
+    if (archivo) onElegir(archivo)
   }
 
   const borde = invalido ? 'border-danger' : vista ? 'border-warning' : 'border-light border-opacity-25'
