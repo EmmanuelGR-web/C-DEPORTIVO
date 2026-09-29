@@ -10,8 +10,24 @@ Club Deportivo
 
 La consigna era tomar el sitio que había hecho antes en HTML, CSS y JavaScript ([Repositorio N° 1](https://github.com/EmmanuelGR-web/CLUB-DEPORTIVO)) y migrarlo a React, de a poco, separándolo en componentes reutilizables que se comunican por props.
 
-No me limité a pasar el HTML a JSX: aproveché la migración para rediseñar varias partes. El sitio ahora tiene un telón de bienvenida, un banner con video, una revista digital que se hojea como un libro, un calendario de partidos, una columna de noticias, las disciplinas en forma de mazo de cartas y una galería de fotos que pasa sola.
+En este nuevo repositorio proveché la migración para rediseñar varias partes. El sitio ahora tiene un telón de bienvenida, un banner con video, una revista digital que se hojea como un libro, un calendario de partidos, una columna de noticias, las disciplinas en forma de mazo de cartas y una galería de fotos que pasa sola.
 
+
+## Funcionalidades
+
+- **Inicio:** telón de bienvenida, banner con video, reseña histórica con revista digital, calendario de eventos, noticias, disciplinas, galería de fotos y formulario de contacto.
+- **Menú lateral** con enlaces a cada sección y botón para ingresar al portal.
+- **Login con acceso por roles** (simulado, sin backend): cada usuario entra a su propio panel y las rutas de los paneles están protegidas.
+- **Recuperar contraseña** y opción de **mantener la sesión iniciada**.
+- **Diseño responsive** para celular, tablet y computadora.
+
+### Usuarios de prueba
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Socio | `socio@club.com` | `socio123` |
+| Personal administrativo | `administrativo@club.com` | `admin123` |
+| Administrador principal | `administrador@club.com` | `principal123` |
 
 ## Tecnologías
 
@@ -22,6 +38,19 @@ No me limité a pasar el HTML a JSX: aproveché la migración para rediseñar va
 - **react-pageflip** para el efecto de pasar las hojas de la revista
 - **Git y GitHub** para el control de versiones
 - **Vercel** para publicar el sitio
+
+## Instalación y ejecución
+
+Hace falta tener [Node.js](https://nodejs.org/) instalado.
+
+```bash
+git clone https://github.com/EmmanuelGR-web/C-DEPORTIVO.git
+cd C-DEPORTIVO
+npm install
+npm run dev
+```
+
+Después abrí el link que muestra la terminal (normalmente `http://localhost:5173`). Para generar la versión final se usa `npm run build`.
 
 ## Estructura
 

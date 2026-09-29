@@ -6,6 +6,7 @@ import PanelSocio from '../pages/PanelSocio'
 import PanelEmpleado from '../pages/PanelEmpleado'
 import PanelAdmin from '../pages/PanelAdmin'
 import NoEncontrado from '../pages/NoEncontrado'
+import RutaProtegida from './RutaProtegida'
 
 function AppRouter() {
   return (
@@ -13,9 +14,30 @@ function AppRouter() {
       <Route path="/" element={<Inicio />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
-      <Route path="/socio" element={<PanelSocio />} />
-      <Route path="/empleado" element={<PanelEmpleado />} />
-      <Route path="/admin" element={<PanelAdmin />} />
+      <Route
+        path="/socio"
+        element={
+          <RutaProtegida rol="socio">
+            <PanelSocio />
+          </RutaProtegida>
+        }
+      />
+      <Route
+        path="/empleado"
+        element={
+          <RutaProtegida rol="empleado">
+            <PanelEmpleado />
+          </RutaProtegida>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <RutaProtegida rol="admin">
+            <PanelAdmin />
+          </RutaProtegida>
+        }
+      />
       <Route path="*" element={<NoEncontrado />} />
     </Routes>
   )
