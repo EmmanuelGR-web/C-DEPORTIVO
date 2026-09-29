@@ -1,3 +1,5 @@
+import { informesEjemplo } from '../data/sociosEjemplo'
+
 // Reglas de la cuota social: se paga hasta el día 15 de cada mes; después se suma
 // un recargo del 0,1 % de la cuota por cada día de demora.
 export const diaVencimiento = 15
@@ -30,9 +32,9 @@ const clave = (socioId) => `pagosInformados:${socioId}`
 
 export const leerInformes = (socioId) => {
   try {
-    return JSON.parse(localStorage.getItem(clave(socioId))) ?? {}
+    return { ...informesEjemplo[socioId], ...JSON.parse(localStorage.getItem(clave(socioId))) }
   } catch {
-    return {}
+    return informesEjemplo[socioId] ?? {}
   }
 }
 

@@ -21,18 +21,20 @@ const leerEstados = () => {
 export const listarSolicitudes = () => {
   const estados = leerEstados()
 
-  const altas = leerSocios().map((s) => ({
-    id: `alta-${s.id}`,
-    tipo: 'Alta de socio',
-    socioId: s.id,
-    socioNombre: s.nombre,
-    socioDni: s.dni,
-    fecha: s.fechaAlta,
-    detalle: `Se registró desde la web con pago en ${s.medioPago?.tipo === 'tarjeta' ? 'tarjeta' : 'efectivo'}.`,
-    cambios: [],
-    foto: s.foto,
-    estadoInicial: s.estado === 'Activo' ? 'Autorizado' : 'Pendiente',
-  }))
+  const altas = leerSocios()
+    .filter((s) => !(s.ejemplo && s.estado === 'Activo'))
+    .map((s) => ({
+      id: `alta-${s.id}`,
+      tipo: 'Alta de socio',
+      socioId: s.id,
+      socioNombre: s.nombre,
+      socioDni: s.dni,
+      fecha: s.fechaAlta,
+      detalle: `Se registró desde la web con pago en ${s.medioPago?.tipo === 'tarjeta' ? 'tarjeta' : 'efectivo'}.`,
+      cambios: [],
+      foto: s.foto,
+      estadoInicial: s.estado === 'Activo' ? 'Autorizado' : 'Pendiente',
+    }))
 
   const perfiles = listarPerfiles()
   const actual = (socioId) => perfiles.find((p) => p.id === socioId)
@@ -42,7 +44,7 @@ export const listarSolicitudes = () => {
     .map((r) => ({
       id: `cambio-${r.id}`,
       auditoriaId: r.id,
-      tipo: r.pendiente ? 'Cambio de identidad' : r.seccion === 'Datos personales' ? 'Modificación de datos' : r.seccion,
+      tipo: r.pendiente ? 'Cambio de nombre, DNI o nacimiento' : r.seccion === 'Datos personales' ? 'Cambio de contacto o domicilio' : r.seccion,
       socioId: r.socioId,
       socioNombre: actual(r.socioId)?.nombre ?? r.socioNombre,
       socioDni: actual(r.socioId)?.dni,

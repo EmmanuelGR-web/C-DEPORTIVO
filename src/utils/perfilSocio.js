@@ -14,7 +14,11 @@ export const correoAdministracion = 'administracion@clubdeportivo.com.ar'
 
 // Nombre y apellido más los últimos 4 números de socio, así dos socios con el mismo nombre no comparten correo
 export const correoInstitucional = (nombre, numeroSocio = '') => {
-  const partes = quitarAcentos(nombre).toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter(Boolean)
+  const partes = quitarAcentos(nombre)
+    .toLowerCase()
+    .replace(/[^a-z ]/g, '')
+    .split(' ')
+    .filter(Boolean)
   const sufijo = numeroSocio ? `.${numeroSocio.slice(-4)}` : ''
   return `${partes.slice(0, 2).join('.')}${sufijo}@socios.clubdeportivo.com.ar`
 }
@@ -158,7 +162,12 @@ export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'So
 
   if (inmediatos.filter(([campo]) => nombresCampo[campo]).length > 0) {
     if (!aplicarCambios(perfil, Object.fromEntries(inmediatos))) return false
-    registrar(inmediatos, { seccion })
+    const documento = inmediatos.filter(([campo]) => camposIdentidad.includes(campo))
+    registrar(
+      inmediatos.filter(([campo]) => !camposIdentidad.includes(campo)),
+      { seccion },
+    )
+    registrar(documento, { seccion: 'Datos de identidad' })
   }
   if (aAprobar.length > 0) registrar(aAprobar, { seccion: 'Datos de identidad', pendiente: true })
 

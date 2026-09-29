@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSesion } from '../hooks/useSesion'
+import { accesoRestringido, guardarAvisoBloqueo } from '../utils/personal'
 import { useDatosEnVivo } from '../hooks/useDatosEnVivo'
 import MensajesInternos from '../components/common/MensajesInternos'
 import { leerHilosInternos } from '../utils/mensajesInternos'
@@ -13,6 +15,8 @@ import MensajesSocios from '../components/empleado/MensajesSocios'
 import RegistroCambios from '../components/empleado/RegistroCambios'
 import NuevoSocio from '../components/empleado/NuevoSocio'
 import DatosEmpleado from '../components/empleado/DatosEmpleado'
+import ControlJornada from '../components/empleado/ControlJornada'
+import { registrarSalida } from '../utils/jornada'
 import { menuEmpleado } from '../data/menus'
 import { empleadoDemo } from '../data/gestion'
 import { listarPerfiles } from '../utils/perfilSocio'
@@ -40,7 +44,8 @@ const leerTodo = () => {
     solicitudes: listarSolicitudes(),
     conversaciones: listarConversaciones(perfiles),
     cambiosSemana: registros.filter((r) => new Date(r.fecha) > haceUnaSemana).length,
-    hilosInternos: leerHilosInternos(),
+    hilosInternos: leerHilosInternos().filter((h) => h.empleado.id === empleadoDemo.id),
+    ausencia: accesoRestringido(empleadoDemo.id),
   }
 }
 
@@ -51,6 +56,13 @@ function PanelEmpleado() {
   const [revisando, setRevisando] = useState(null)
   const [mostrarDetalle, setMostrarDetalle] = useState(false)
   const [fichaAbierta, setFichaAbierta] = useState(null)
+  const { cerrarSesion } = useSesion()
+  useEffect(() => {
+    if (!datos.ausencia) return
+    registrarSalida(empleadoDemo.id, true)
+    guardarAvisoBloqueo(datos.ausencia)
+    cerrarSesion()
+  }, [datos.ausencia, cerrarSesion])
 
   const revisar = (solicitud) => {
     setRevisando(solicitud)
@@ -84,6 +96,8 @@ function PanelEmpleado() {
       activo={seccion}
       onActualizar={recargar}
       actualizado={actualizado}
+      extra={<ControlJornada empleado={empleadoDemo} />}
+      alSalir={() => registrarSalida(empleadoDemo.id)}
       onSeleccionar={(id) => {
         setSeccion(id)
         setFichaAbierta(null)
@@ -99,7 +113,7 @@ function PanelEmpleado() {
         ))}
       {seccion === 'mensajes' && <MensajesSocios conversaciones={datos.conversaciones} onResponder={responder} />}
       {seccion === 'cambios' && <RegistroCambios registros={datos.registros} />}
-      {seccion === 'interno' && <MensajesInternos rol="empleado" hilos={datos.hilosInternos} onCambio={recargar} />}
+      {seccion === 'interno' && <MensajesInternos rol="empleado" hilos={datos.hilosInternos} onCambio={recargar} empleado={empleadoDemo} />}
       {seccion === 'nuevo' && <NuevoSocio empleado={empleadoDemo} onCreado={recargar} />}
       {seccion === 'datos' && <DatosEmpleado empleado={empleadoDemo} />}
 

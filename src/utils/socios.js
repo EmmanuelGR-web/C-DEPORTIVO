@@ -1,15 +1,19 @@
 import { usuariosDemo } from '../data/usuarios'
+import { sociosEjemplo } from '../data/sociosEjemplo'
 
 const clave = 'sociosRegistrados'
 
 export const normalizarEmail = (email) => email.trim().toLowerCase()
 export const normalizarDni = (dni) => dni.replace(/\D/g, '')
 
+// Los socios de ejemplo se suman a los registrados. Si alguno se modifica, se guarda junto con los demás
+// y a partir de ahí manda la versión guardada.
 export const leerSocios = () => {
   try {
-    return JSON.parse(localStorage.getItem(clave)) ?? []
+    const guardados = JSON.parse(localStorage.getItem(clave)) ?? []
+    return [...sociosEjemplo.filter((e) => !guardados.some((s) => s.id === e.id)), ...guardados]
   } catch {
-    return []
+    return sociosEjemplo
   }
 }
 

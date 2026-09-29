@@ -75,3 +75,67 @@ export const descargarEstadoCuenta = async (socio, pagos, descripcionFiltro) => 
 
   doc.save(`estado-de-cuenta-${socio.numeroSocio}.pdf`)
 }
+
+// Resumen económico de un mes para contaduría: totales, composición de lo cobrado, morosos y evolución
+export const descargarResumenEconomico = async (resumen, evolucion, autor) => {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')])
+  const escudo = await imagenReducida('/logo.png', 240)
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const tabla = (titulo, opciones) => {
+    const y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 44
+    doc.setFont('helvetica', 'bold').setFontSize(11).setTextColor(...colores.bordo).text(titulo, 14, y)
+    autoTable(doc, { startY: y + 3, headStyles: { fillColor: colores.bordo }, styles: { fontSize: 9 }, ...opciones })
+  }
+
+  doc.addImage(escudo, 'PNG', 14, 10, 24, 14)
+  doc.setFont('helvetica', 'bold').setFontSize(16).setTextColor(...colores.dark).text('Resumen económico', 42, 17)
+  doc.setFont('helvetica', 'normal').setFontSize(10).text(`Período: ${resumen.nombre}`, 42, 23)
+  doc.setFontSize(8).setTextColor(110).text(`Emitido el ${new Date().toLocaleString('es-AR')} por ${autor}`, 42, 28)
+
+  tabla('Totales del período', {
+    body: [
+      ['Cuotas emitidas', `${resumen.padron}`, formatearPesos(resumen.emitido)],
+      ['Ingresos cobrados', `${resumen.alDia}`, formatearPesos(resumen.ingresos)],
+      ['   de los cuales, recargos por mora', '', formatearPesos(resumen.recargosCobrados)],
+      ['Comprobantes en revisión', `${resumen.cantidadEnRevision}`, formatearPesos(resumen.enRevision)],
+      ['Cuotas impagas (a cobrar)', `${resumen.cantidadImpagas}`, formatearPesos(resumen.impago)],
+      ['Cobranza del período', '', `${resumen.cobranza} %`],
+    ],
+    head: [['Concepto', 'Socios', 'Importe']],
+    columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' } },
+  })
+  tabla('Padrón', {
+    head: [['Socios en padrón', 'Activos', 'Al día', 'Morosos']],
+    body: [[resumen.padron, resumen.activos, resumen.alDia, resumen.morosos.length]],
+    columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' } },
+  })
+  tabla('Cobrado por medio de pago', {
+    head: [['Medio', 'Cuotas', 'Importe']],
+    body: resumen.porMedio.length ? resumen.porMedio.map((g) => [g.etiqueta, g.cantidad, formatearPesos(g.monto)]) : [['Sin cobros en el período', '', '']],
+    columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' } },
+  })
+  tabla('Cuotas emitidas por categoría', {
+    head: [['Categoría', 'Socios', 'Importe']],
+    body: resumen.porCategoria.map((g) => [g.etiqueta, g.cantidad, formatearPesos(g.monto)]),
+    columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' } },
+  })
+  tabla('Socios morosos', {
+    head: [['Socio', 'N° de socio', 'Días de demora', 'Recargo', 'Deuda']],
+    body: resumen.morosos.length
+      ? resumen.morosos.map((m) => [m.nombre, m.numeroSocio, m.dias, formatearPesos(m.recargo), formatearPesos(m.total)])
+      : [['No hay socios morosos en el período', '', '', '', '']],
+    columnStyles: { 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+  })
+  tabla('Evolución de los últimos meses', {
+    head: [['Mes', 'Cobrado', 'Pendiente de cobro']],
+    body: evolucion.map((m) => [m.nombre, formatearPesos(m.ingresos), formatearPesos(m.impago)]),
+    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
+  })
+
+  const paginas = doc.getNumberOfPages()
+  for (let i = 1; i <= paginas; i++) {
+    doc.setPage(i).setFont('helvetica', 'normal').setFontSize(8).setTextColor(130)
+    doc.text(`Club Deportivo · Resumen económico ${resumen.nombre} · Página ${i} de ${paginas}`, 105, 290, { align: 'center' })
+  }
+  doc.save(`resumen-economico-${resumen.periodo}.pdf`)
+}

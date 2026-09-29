@@ -13,6 +13,7 @@ export const usuariosDemo = [
     nombre: 'Pedro Díaz',
     rol: 'empleado',
     rolTexto: 'Personal administrativo',
+    empleadoId: 'emp-a01',
     ruta: '/empleado',
   },
   {
