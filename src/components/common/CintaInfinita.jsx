@@ -1,7 +1,5 @@
 import { useEffect, useRef } from 'react'
 
-// Recibe una función que dibuja la lista y la repite dos veces: al llegar a la mitad,
-// la animación vuelve al inicio sin que se note el salto. Se frena al pasar el mouse.
 function CintaInfinita({ items, renderItem, segundosPorVuelta = 40, className = '' }) {
   const cinta = useRef(null)
   const animacion = useRef(null)

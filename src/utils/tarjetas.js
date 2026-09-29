@@ -11,7 +11,6 @@ export const detectarRed = (numero) => {
   return null
 }
 
-// Agrupa de a 4 (Visa y Mastercard) o 4-6-5 (American Express), como viene impreso
 export const formatearNumero = (numero) => {
   const n = soloNumeros(numero)
   const red = detectarRed(n)
@@ -28,7 +27,6 @@ export const formatearNumero = (numero) => {
   return partes.join(' ')
 }
 
-// Algoritmo de Luhn: el dígito verificador que usan todas las tarjetas
 export const pasaLuhn = (numero) => {
   const n = soloNumeros(numero)
   let suma = 0
@@ -84,7 +82,6 @@ export const erroresTarjeta = (tarjeta) => {
   }
 }
 
-// Solo se guarda lo necesario para identificar la tarjeta, nunca el número completo ni el código
 export const resumirTarjeta = (tarjeta) => ({
   tipo: 'tarjeta',
   debitoAutomatico: tarjeta.debitoAutomatico,

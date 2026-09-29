@@ -5,7 +5,6 @@ export const coloresCategoria = {
   Básquet: { bg: 'light', text: 'dark', borde: true },
 }
 
-// Noticias de la columna derecha de Inicio. imagen y enlace son opcionales.
 export const noticias = [
   {
     id: 'partido-local',

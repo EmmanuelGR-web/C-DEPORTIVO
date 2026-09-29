@@ -2,20 +2,22 @@ import { Offcanvas, Nav, Button, Image, CloseButton } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import { FaSignOutAlt, FaUserCircle } from 'react-icons/fa'
 import { useSesion } from '../../hooks/useSesion'
-import { fondoElectrico } from '../auth/estilosAuth'
+import { fondoBordo, fondoElectrico } from '../auth/estilosAuth'
 import { useEsEscritorio } from '../../hooks/useEsEscritorio'
 
 const variantes = {
   electrico: { clase: 'bg-black', estilo: fondoElectrico },
   rojo: { clase: 'bg-primary', estilo: undefined },
+  bordo: { clase: 'bg-secondary', estilo: fondoBordo },
 }
 
-function BarraLateral({ usuario, detalle, items, activo, onSeleccionar, variante = 'electrico', mostrar, onCerrar }) {
+function BarraLateral({ usuario, detalle, items, activo, onSeleccionar, variante = 'electrico', mostrar, onCerrar, alSalir }) {
   const { cerrarSesion } = useSesion()
   const esEscritorio = useEsEscritorio()
   const navegar = useNavigate()
 
   const salir = () => {
+    alSalir?.()
     cerrarSesion()
     navegar('/login', { replace: true })
   }
@@ -73,7 +75,7 @@ function BarraLateral({ usuario, detalle, items, activo, onSeleccionar, variante
         </Nav>
 
         <div className="p-4">
-          <Button variant={variante === 'rojo' ? 'light' : 'primary'} className="w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2" onClick={salir}>
+          <Button variant={{ rojo: 'light', bordo: 'outline-light' }[variante] ?? 'primary'} className="w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2" onClick={salir}>
             <FaSignOutAlt aria-hidden="true" /> Cerrar sesión
           </Button>
         </div>

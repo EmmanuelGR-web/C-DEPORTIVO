@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Button } from 'react-bootstrap'
 import { FaBars, FaSyncAlt } from 'react-icons/fa'
 import BarraLateral from './BarraLateral'
+import { useEsEscritorio } from '../../hooks/useEsEscritorio'
 
 const hora = (fecha) => fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
-function PanelLayout({ titulo, children, onActualizar, actualizado, ...propsBarra }) {
+function PanelLayout({ titulo, children, onActualizar, actualizado, extra, ...propsBarra }) {
+  const esEscritorio = useEsEscritorio()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [girando, setGirando] = useState(false)
 
@@ -17,7 +19,7 @@ function PanelLayout({ titulo, children, onActualizar, actualizado, ...propsBarr
 
   return (
     <div className="d-lg-flex min-vh-100 bg-body-tertiary">
-      <div className="flex-shrink-0 sticky-lg-top align-self-lg-start">
+      <div className="flex-shrink-0 sticky-lg-top align-self-lg-start" style={esEscritorio ? { height: '100vh', overflowY: 'auto', overscrollBehavior: 'contain' } : undefined}>
         <BarraLateral {...propsBarra} mostrar={menuAbierto} onCerrar={() => setMenuAbierto(false)} />
       </div>
 
@@ -37,6 +39,7 @@ function PanelLayout({ titulo, children, onActualizar, actualizado, ...propsBarr
             </div>
           )}
         </div>
+        {extra}
         {children}
       </main>
     </div>

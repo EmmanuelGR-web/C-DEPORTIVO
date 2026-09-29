@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Form, FloatingLabel, Button, Alert } from 'react-bootstrap'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -6,6 +6,8 @@ import { useSesion } from '../../hooks/useSesion'
 import { usuariosDemo } from '../../data/usuarios'
 import RecuperarContrasena from './RecuperarContrasena'
 import UsuariosPrueba from './UsuariosPrueba'
+import { borrarAvisoBloqueo, leerAvisoBloqueo, textoAusencia, textoRegreso } from '../../utils/personal'
+import { tomarAvisoSalida } from '../../utils/jornada'
 
 function FormularioLogin() {
   const { iniciarSesion } = useSesion()
@@ -19,6 +21,10 @@ function FormularioLogin() {
   const [validado, setValidado] = useState(false)
   const [error, setError] = useState(false)
   const [recuperar, setRecuperar] = useState(false)
+  const [bloqueo, setBloqueo] = useState(leerAvisoBloqueo)
+  const [despedida, setDespedida] = useState(tomarAvisoSalida)
+
+  useEffect(() => borrarAvisoBloqueo(), [])
 
   const emailInvalido = validado && !/^\S+@\S+\.\S+$/.test(email)
   const contrasenaInvalida = validado && contrasena.length < 6
@@ -26,12 +32,18 @@ function FormularioLogin() {
   const enviar = async (e) => {
     e.preventDefault()
     setError(false)
+    setBloqueo(null)
+    setDespedida(null)
     setValidado(true)
     if (!/^\S+@\S+\.\S+$/.test(email) || contrasena.length < 6) return
 
     const usuario = await iniciarSesion(email, contrasena, recordar)
     if (!usuario) {
       setError(true)
+      return
+    }
+    if (usuario.bloqueado) {
+      setBloqueo(usuario.bloqueado)
       return
     }
     navegar(ubicacion.state?.desde ?? usuario.ruta, { replace: true })
@@ -46,6 +58,16 @@ function FormularioLogin() {
   return (
     <>
       <Form noValidate onSubmit={enviar}>
+        {despedida && (
+          <Alert variant="success" className="py-2 small" dismissible onClose={() => setDespedida(null)}>
+            {despedida}
+          </Alert>
+        )}
+        {bloqueo && (
+          <Alert variant="warning" className="py-2 small">
+            <strong>Tu acceso al portal está pausado.</strong> {textoAusencia(bloqueo)}. {textoRegreso(bloqueo).replace('Vuelve', 'Vas a poder ingresar')}.
+          </Alert>
+        )}
         {error && (
           <Alert variant="danger" className="py-2">
             El correo o la contraseña no son correctos.

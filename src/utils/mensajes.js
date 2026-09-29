@@ -3,8 +3,6 @@ import { correoAdministracion } from './perfilSocio'
 
 const clave = (socioId) => `bandeja:${socioId}`
 
-// Se aceptan archivos grandes, pero las imágenes se achican antes de guardarlas:
-// todo vive en el localStorage del navegador, que tiene unos 5 MB en total
 export const maximoOriginal = 10 * 1024 * 1024
 export const maximoPdf = 1.5 * 1024 * 1024
 export const textoLimite = 'Imágenes de hasta 10 MB (se optimizan solas) o PDF de hasta 1,5 MB'
@@ -46,7 +44,6 @@ const leerComoDataUrl = (archivo) =>
 
 const bytesDe = (dataUrl) => Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 0.75)
 
-// Redimensiona la imagen a 1600 px de lado máximo y la guarda como JPEG: se sigue leyendo bien y pesa mucho menos
 const optimizarImagen = (dataUrl) =>
   new Promise((resolver, rechazar) => {
     const imagen = new Image()

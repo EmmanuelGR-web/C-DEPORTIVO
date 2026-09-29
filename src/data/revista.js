@@ -1,5 +1,3 @@
-// Revista digital de la reseña histórica. Cada objeto es una página del libro.
-// tipo: 'tapa' | 'indice' | 'articulo' | 'contratapa'
 
 export const resumenResena =
   'Fundado en 1919 en San Miguel de Tucumán, el club es desde hace más de un siglo un símbolo de identidad para toda la provincia. Generaciones de socios crecieron entre sus canchas, sus tribunas y su sede social.'

@@ -6,6 +6,7 @@ const estilos = {
   Autorizado: { bg: 'success' },
   Pendiente: { bg: 'warning', texto: 'dark' },
   'En validación': { bg: 'warning', texto: 'dark' },
+  'Esperando aprobación': { bg: 'warning', texto: 'dark' },
   Rechazado: { bg: 'danger' },
   Vencido: { bg: 'danger' },
   'En revisión': { bg: 'info', texto: 'dark' },

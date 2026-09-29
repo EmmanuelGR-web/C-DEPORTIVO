@@ -18,7 +18,6 @@ function RevistaDigital({ mostrar, onCerrar, paginas }) {
       </Modal.Header>
 
       <Modal.Body className="d-flex flex-column align-items-center justify-content-center gap-3 py-2">
-        {/* El ancho máximo depende del alto de la pantalla para que el libro entre entero */}
         <div className="w-100" style={{ maxWidth: 'calc((100dvh - 170px) * 1.41)' }}>
           <HTMLFlipBook
             ref={libro}

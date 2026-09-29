@@ -12,9 +12,12 @@ const quitarAcentos = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]
 
 export const correoAdministracion = 'administracion@clubdeportivo.com.ar'
 
-// Nombre y apellido más los últimos 4 números de socio, así dos socios con el mismo nombre no comparten correo
 export const correoInstitucional = (nombre, numeroSocio = '') => {
-  const partes = quitarAcentos(nombre).toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter(Boolean)
+  const partes = quitarAcentos(nombre)
+    .toLowerCase()
+    .replace(/[^a-z ]/g, '')
+    .split(' ')
+    .filter(Boolean)
   const sufijo = numeroSocio ? `.${numeroSocio.slice(-4)}` : ''
   return `${partes.slice(0, 2).join('.')}${sufijo}@socios.clubdeportivo.com.ar`
 }
@@ -40,9 +43,6 @@ const datosBase = (usuario) => {
   }
 }
 
-// Una cuota por mes desde el alta hasta hoy. Los meses anteriores figuran pagos en término.
-// El mes actual: con débito automático se cobra solo; si no, queda pendiente (o vencido después del 15)
-// hasta que el socio informe el pago y el personal apruebe el comprobante.
 const generarPagos = (base, hoy) => {
   const alta = new Date(base.fechaAlta)
   const informes = leerInformes(base.id)
@@ -110,8 +110,6 @@ export const perfilSocio = (usuario, hoy = new Date()) => {
   }
 }
 
-// Nombre, DNI y fecha de nacimiento son datos de identidad: si los cambia el socio,
-// quedan pendientes hasta que el personal los apruebe comparándolos con el DNI
 export const camposIdentidad = ['nombre', 'dni', 'fechaNacimiento']
 
 const nombresCampo = {
@@ -134,8 +132,6 @@ const describir = (campo, valor) => {
   return valor
 }
 
-// Guarda los cambios del socio y deja constancia en la auditoría
-// Devuelve false si no hubo cambios, true si se aplicaron y 'pendiente' si hay datos de identidad esperando aprobación
 export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'Socio') => {
   const cambios = cambiosPedidos.dni ? { ...cambiosPedidos, dni: normalizarDni(cambiosPedidos.dni) } : cambiosPedidos
   const distintos = Object.entries(cambios).filter(([campo, nuevo]) => JSON.stringify(perfil[campo] ?? null) !== JSON.stringify(nuevo))
@@ -158,7 +154,12 @@ export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'So
 
   if (inmediatos.filter(([campo]) => nombresCampo[campo]).length > 0) {
     if (!aplicarCambios(perfil, Object.fromEntries(inmediatos))) return false
-    registrar(inmediatos, { seccion })
+    const documento = inmediatos.filter(([campo]) => camposIdentidad.includes(campo))
+    registrar(
+      inmediatos.filter(([campo]) => !camposIdentidad.includes(campo)),
+      { seccion },
+    )
+    registrar(documento, { seccion: 'Datos de identidad' })
   }
   if (aAprobar.length > 0) registrar(aAprobar, { seccion: 'Datos de identidad', pendiente: true })
 
@@ -166,7 +167,6 @@ export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'So
   return inmediatos.some(([campo]) => nombresCampo[campo])
 }
 
-// El personal aprobó un cambio de identidad pedido por el socio: recién ahí se aplica
 export const aplicarIdentidad = (socioId, valores) => {
   const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
   return aplicarCambios(perfil, Object.fromEntries(Object.entries(valores).map(([campo, v]) => [campo, v.nuevo])))
@@ -183,8 +183,6 @@ const aplicarCambios = (perfil, cambios) => {
   }
 }
 
-// Vuelve a poner los valores anteriores de un cambio rechazado. Si el socio ya volvió a modificar
-// ese dato después, no lo pisa: solo revierte los campos que siguen con el valor rechazado.
 export const revertirCambios = (socioId, valores, autor) => {
   const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
   const aRevertir = Object.fromEntries(
@@ -209,7 +207,6 @@ export const revertirCambios = (socioId, valores, autor) => {
 
 export const mesesEntreCambiosDeFoto = 6
 
-// Devuelve la fecha desde la que se puede volver a cambiar la foto, o null si ya se puede
 export const proximoCambioDeFoto = (perfil, hoy = new Date()) => {
   if (!perfil.foto || !perfil.fotoActualizada) return null
   const habilitada = new Date(perfil.fotoActualizada)
@@ -217,5 +214,4 @@ export const proximoCambioDeFoto = (perfil, hoy = new Date()) => {
   return habilitada > hoy ? habilitada : null
 }
 
-// Todos los socios de este navegador (el de prueba y los registrados), con su perfil completo
 export const listarPerfiles = () => [perfilSocio({}), ...leerSocios().map((s) => perfilSocio({ id: s.id }))]

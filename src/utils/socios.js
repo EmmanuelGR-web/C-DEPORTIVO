@@ -1,4 +1,5 @@
 import { usuariosDemo } from '../data/usuarios'
+import { sociosEjemplo } from '../data/sociosEjemplo'
 
 const clave = 'sociosRegistrados'
 
@@ -7,13 +8,13 @@ export const normalizarDni = (dni) => dni.replace(/\D/g, '')
 
 export const leerSocios = () => {
   try {
-    return JSON.parse(localStorage.getItem(clave)) ?? []
+    const guardados = JSON.parse(localStorage.getItem(clave)) ?? []
+    return [...sociosEjemplo.filter((e) => !guardados.some((s) => s.id === e.id)), ...guardados]
   } catch {
-    return []
+    return sociosEjemplo
   }
 }
 
-// La contraseña nunca se guarda tal cual: se guarda su huella SHA-256
 export const cifrarContrasena = async (contrasena) => {
   const bytes = new TextEncoder().encode(contrasena)
   const huella = await crypto.subtle.digest('SHA-256', bytes)
@@ -50,8 +51,6 @@ export const validarSocio = async (email, contrasena) => {
   return socio.contrasenaCifrada === (await cifrarContrasena(contrasena)) ? socio : null
 }
 
-// Los usuarios de prueba tienen su contraseña fija en el código; si se cambia o restablece,
-// la nueva huella se guarda aparte y tiene prioridad sobre la fija
 const claveDemo = 'contrasenasDemo'
 
 const leerContrasenasDemo = () => {
@@ -67,7 +66,6 @@ export const validarContrasenaDemo = async (usuario, contrasena) => {
   return guardada ? guardada === (await cifrarContrasena(contrasena)) : usuario.contrasena === contrasena
 }
 
-// El socio de prueba entra siempre con el correo de usuarios de prueba, aunque cambie el de contacto
 const usuarioSocioDemo = () => usuariosDemo.find((u) => u.rol === 'socio')
 
 const guardarContrasena = async (perfil, nueva, extra = {}) => {
@@ -83,7 +81,6 @@ const guardarContrasena = async (perfil, nueva, extra = {}) => {
   }
 }
 
-// El personal restablece la contraseña al número de DNI; el socio después la puede cambiar
 export const restablecerContrasena = (perfil) => guardarContrasena(perfil, normalizarDni(perfil.dni), { debeCambiarContrasena: true })
 
 export const cambiarContrasena = async (perfil, actual, nueva) => {

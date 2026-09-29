@@ -4,7 +4,6 @@ export const categorias = {
   Oro: { degradado: 'linear-gradient(135deg, #a67c00, #f5d76e 55%, #b8860b)', texto: 'dark', rgb: [212, 175, 55], tonos: ['#a67c00', '#f5d76e', '#b8860b'] },
 }
 
-// Bronce: hasta 2 años · Plata: más de 2 y hasta 10 · Oro: más de 10
 export const categoriaPorAntiguedad = (anios) => (anios <= 2 ? 'Bronce' : anios <= 10 ? 'Plata' : 'Oro')
 
 export const cuotaPorCategoria = { Bronce: 15000, Plata: 18000, Oro: 21000 }

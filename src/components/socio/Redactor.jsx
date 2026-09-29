@@ -30,6 +30,10 @@ function Redactor({ id, conAsunto = false, textoBoton = 'Enviar', onEnviar, onCa
     setValidado(true)
     if (!texto.trim() || (conAsunto && !asunto.trim())) return
     const enviado = onEnviar({ asunto: asunto.trim(), texto: texto.trim(), adjuntos })
+    if (typeof enviado === 'string') {
+      setError(enviado)
+      return
+    }
     if (!enviado) {
       setError('No pudimos guardar el mensaje: los adjuntos ocupan demasiado espacio en este navegador.')
       return

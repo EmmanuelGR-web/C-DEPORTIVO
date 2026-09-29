@@ -1,17 +1,22 @@
 import { useState } from 'react'
-import { Row, Col, Badge, ListGroup, Button } from 'react-bootstrap'
+import { Row, Col, Badge, ListGroup, Button, Form } from 'react-bootstrap'
 import MensajeHilo from './MensajeHilo'
 import Redactor from '../socio/Redactor'
-import { correosInternos, crearHiloInterno, marcarLeidoInterno, nombresInternos, responderInterno } from '../../utils/mensajesInternos'
+import { correoDireccion, crearHilosInternos, marcarLeidoInterno, nombreDireccion, responderInterno } from '../../utils/mensajesInternos'
+import { ausenciaVigente, fechaDeHoy, textoRegreso } from '../../utils/personal'
 
 const fechaCorta = (iso) => new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-// Bandeja interna entre el personal administrativo y el administrador principal.
-// La usan los dos paneles: `rol` indica desde qué lado se está escribiendo.
-function MensajesInternos({ rol, hilos, onCambio }) {
+function MensajesInternos({ rol, hilos, onCambio, personal = [], empleado }) {
+  const esAdmin = rol === 'admin'
   const [abierto, setAbierto] = useState(null)
   const [redactando, setRedactando] = useState(false)
-  const otro = rol === 'admin' ? 'empleado' : 'admin'
+  const [destino, setDestino] = useState('')
+  const [sinDestino, setSinDestino] = useState(false)
+  const [conQuien, setConQuien] = useState('')
+  const [hoy] = useState(() => fechaDeHoy())
+  const activos = personal.filter((e) => !ausenciaVigente(e, hoy))
+  const visibles = hilos.filter((h) => !conQuien || h.empleado.id === conQuien)
   const hilo = hilos.find((h) => h.id === abierto)
   const verDetalle = Boolean(hilo) || redactando
 
@@ -29,18 +34,44 @@ function MensajesInternos({ rol, hilos, onCambio }) {
   }
 
   const crear = (datos) => {
-    const id = crearHiloInterno(rol, datos)
+    if (esAdmin && !destino) {
+      setSinDestino(true)
+      return 'Elegí a quién le mandás el mensaje.'
+    }
+    const destinatarios = !esAdmin ? [empleado] : destino === 'todos' ? activos : personal.filter((e) => e.id === destino)
+    const id = crearHilosInternos(rol, datos, destinatarios)
     if (!id) return false
     setRedactando(false)
+    setDestino('')
     setAbierto(id)
     onCambio()
     return true
   }
 
+  const nombreOtro = (h) => (esAdmin ? h.empleado.nombre : nombreDireccion)
+
   return (
     <>
-      <div className="bg-white rounded-4 shadow-sm p-3 mb-3 small">
-        Canal interno con <strong>{nombresInternos[otro]}</strong> · {correosInternos[otro]}
+      <div className="bg-white rounded-4 shadow-sm p-3 mb-3 small d-flex flex-wrap align-items-center gap-2">
+        {esAdmin ? (
+          <>
+            <span>
+              Escribís desde <strong>{correoDireccion}</strong>. Al redactar elegís a qué persona del personal le llega.
+            </span>
+            <Form.Select size="sm" className="w-auto ms-md-auto" value={conQuien} onChange={(e) => setConQuien(e.target.value)} aria-label="Ver conversaciones con">
+              <option value="">Conversaciones con todo el personal</option>
+              {personal.map((e) => (
+                <option key={e.id} value={e.id}>
+                  Con {e.nombre}
+                </option>
+              ))}
+            </Form.Select>
+          </>
+        ) : (
+          <span>
+            Canal interno con <strong>{nombreDireccion}</strong> · {correoDireccion}
+          </span>
+        )}
       </div>
 
       <Row className="g-3">
@@ -51,12 +82,14 @@ function MensajesInternos({ rol, hilos, onCambio }) {
             onClick={() => {
               setAbierto(null)
               setRedactando(true)
+              setSinDestino(false)
             }}
           >
             Nuevo mensaje
           </Button>
+          {visibles.length === 0 && <p className="text-center text-body-secondary small py-4">No hay conversaciones.</p>}
           <ListGroup className="shadow-sm rounded-4">
-            {hilos.map((h) => {
+            {visibles.map((h) => {
               const ultimo = h.mensajes.at(-1)
               return (
                 <ListGroup.Item key={h.id} action active={h.id === abierto} onClick={() => abrir(h.id)} className="py-3">
@@ -69,6 +102,7 @@ function MensajesInternos({ rol, hilos, onCambio }) {
                     <span className={`text-truncate ${h.leidoPor[rol] ? '' : 'fw-bold'}`}>{h.asunto}</span>
                     <small className="ms-auto text-nowrap opacity-75">{fechaCorta(ultimo.fecha)}</small>
                   </div>
+                  {esAdmin && <small className="d-block fw-semibold opacity-75">Con {h.empleado.nombre}</small>}
                   <small className="d-block text-truncate opacity-75">{ultimo.texto}</small>
                 </ListGroup.Item>
               )
@@ -92,16 +126,42 @@ function MensajesInternos({ rol, hilos, onCambio }) {
             )}
             {redactando && (
               <>
-                <h2 className="h5 fw-bold text-secondary mb-1">Nuevo mensaje</h2>
-                <p className="small text-body-secondary">Para: {correosInternos[otro]}</p>
+                <h2 className="h5 fw-bold text-secondary mb-3">Nuevo mensaje</h2>
+                {esAdmin ? (
+                  <Form.Group className="mb-3" controlId="interno-destino">
+                    <Form.Label className="small fw-semibold">Para</Form.Label>
+                    <Form.Select
+                      value={destino}
+                      onChange={(e) => {
+                        setDestino(e.target.value)
+                        setSinDestino(false)
+                      }}
+                      isInvalid={sinDestino}
+                    >
+                      <option value="">Elegí a quién le escribís</option>
+                      <option value="todos">Todo el personal en actividad ({activos.length} personas)</option>
+                      {personal.map((e) => (
+                        <option key={e.id} value={e.id} disabled={Boolean(ausenciaVigente(e, hoy))}>
+                          {e.nombre} · {e.rol} · {e.correo}
+                          {ausenciaVigente(e, hoy) ? ` (${ausenciaVigente(e, hoy).motivo.toLowerCase()} · ${textoRegreso(ausenciaVigente(e, hoy)).toLowerCase()})` : ''}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">Elegí un destinatario.</Form.Control.Feedback>
+                    {destino === 'todos' && <Form.Text>Cada persona recibe el mensaje en una conversación propia.</Form.Text>}
+                  </Form.Group>
+                ) : (
+                  <p className="small text-body-secondary">Para: {correoDireccion}</p>
+                )}
                 <Redactor id={`interno-nuevo-${rol}`} conAsunto onEnviar={crear} onCancelar={() => setRedactando(false)} />
               </>
             )}
             {hilo && (
               <>
-                <h2 className="h5 fw-bold text-secondary mb-3">{hilo.asunto}</h2>
+                <h2 className="h5 fw-bold text-secondary mb-1">{hilo.asunto}</h2>
+                {esAdmin && <p className="small text-body-secondary mb-3">Conversación con {hilo.empleado.nombre} · {hilo.empleado.correo}</p>}
                 {hilo.mensajes.map((m) => (
-                  <MensajeHilo key={m.id} mensaje={m} propio={m.rol === rol} nombreOtro={nombresInternos[otro]} />
+                  <MensajeHilo key={m.id} mensaje={m} propio={m.rol === rol} nombreOtro={nombreOtro(hilo)} />
                 ))}
                 <div className="border-top pt-3">
                   <Redactor id={`interno-${hilo.id}`} textoBoton="Responder" onEnviar={responder} />

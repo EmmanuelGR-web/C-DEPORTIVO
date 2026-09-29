@@ -1,4 +1,3 @@
-// Diferencia exacta entre dos fechas en años, meses y días (como se cuenta en un calendario)
 export const diferenciaExacta = (desde, hasta = new Date()) => {
   let anios = hasta.getFullYear() - desde.getFullYear()
   let meses = hasta.getMonth() - desde.getMonth()
