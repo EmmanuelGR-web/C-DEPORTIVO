@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Modal, Button, Alert, Spinner } from 'react-bootstrap'
-import { FaCamera, FaSyncAlt } from 'react-icons/fa'
+import { FaCamera } from 'react-icons/fa'
 
 const tamanio = 480
 
-function CamaraSelfie({ foto, onCapturar, invalido }) {
+function CamaraSelfie({ foto, onCapturar, invalido, variante = 'oscura', deshabilitado = false, textoVacio = 'Sacate una selfie' }) {
   const [abierta, setAbierta] = useState(false)
   const [lista, setLista] = useState(false)
   const [error, setError] = useState(false)
@@ -66,27 +66,29 @@ function CamaraSelfie({ foto, onCapturar, invalido }) {
     cerrar()
   }
 
-  const borde = invalido ? 'border-danger' : foto ? 'border-warning' : 'border-light border-opacity-25'
+  const borde = invalido ? 'border-danger' : foto ? 'border-warning' : variante === 'clara' ? 'border-secondary border-opacity-25' : 'border-light border-opacity-25'
+  const colores = variante === 'clara' ? 'text-secondary bg-secondary bg-opacity-10' : 'text-white bg-white bg-opacity-10'
 
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierta(true)}
-        className={`position-relative d-flex flex-column align-items-center justify-content-center gap-2 mx-auto text-white small fw-semibold text-uppercase bg-white bg-opacity-10 border border-2 ${borde} rounded-circle overflow-hidden`}
+        disabled={deshabilitado}
+        className={`position-relative d-flex flex-column align-items-center justify-content-center gap-2 mx-auto small fw-semibold text-uppercase ${colores} border border-2 ${borde} ${deshabilitado ? 'opacity-75' : ''} rounded-circle overflow-hidden`}
         style={{ width: 150, height: 150 }}
       >
         {foto ? (
           <>
             <img src={foto} alt="Tu selfie" className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" />
             <span className="position-absolute bottom-0 start-50 translate-middle-x mb-2 badge rounded-pill bg-dark bg-opacity-75">
-              <FaSyncAlt aria-hidden="true" /> Repetir
+              {deshabilitado ? 'Bloqueada' : 'Cambiar'}
             </span>
           </>
         ) : (
           <>
-            <FaCamera className="fs-2" aria-hidden="true" />
-            Sacate una selfie
+            {variante !== 'clara' && <FaCamera className="fs-2" aria-hidden="true" />}
+            {textoVacio}
           </>
         )}
       </button>
@@ -126,7 +128,7 @@ function CamaraSelfie({ foto, onCapturar, invalido }) {
               </div>
               <p className="small text-white-50">Ubicá tu cara dentro del círculo, con buena luz y sin anteojos de sol.</p>
               <Button variant="light" className="rounded-pill px-4 fw-bold" onClick={sacarFoto} disabled={!lista}>
-                <FaCamera aria-hidden="true" /> Sacar foto
+                Sacar foto
               </Button>
             </>
           )}

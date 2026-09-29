@@ -18,8 +18,8 @@ export const cifrarContrasena = async (contrasena) => {
   return [...new Uint8Array(huella)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-export const buscarDuplicado = ({ email, dni }) => {
-  const socios = leerSocios()
+export const buscarDuplicado = ({ email, dni }, excluirId) => {
+  const socios = leerSocios().filter((s) => s.id !== excluirId)
   if (socios.some((s) => s.email === normalizarEmail(email))) return 'email'
   if (socios.some((s) => s.dni === normalizarDni(dni))) return 'dni'
   return null
@@ -46,4 +46,15 @@ export const validarSocio = async (email, contrasena) => {
   const socio = leerSocios().find((s) => s.email === normalizarEmail(email))
   if (!socio) return null
   return socio.contrasenaCifrada === (await cifrarContrasena(contrasena)) ? socio : null
+}
+
+export const actualizarSocio = (id, cambios) => {
+  const socios = leerSocios()
+  const nuevos = socios.map((s) => (s.id === id ? { ...s, ...cambios } : s))
+  try {
+    localStorage.setItem(clave, JSON.stringify(nuevos))
+    return true
+  } catch {
+    return false
+  }
 }

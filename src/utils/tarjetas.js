@@ -1,4 +1,4 @@
-import { redesTarjeta } from '../data/pagos'
+import { emisores, redesTarjeta } from '../data/pagos'
 
 export const soloNumeros = (texto) => texto.replace(/\D/g, '')
 
@@ -58,3 +58,37 @@ export const vencimientoValido = (texto, hoy = new Date()) => {
   const vence = anio * 12 + (mes - 1)
   return vence >= actual && vence <= actual + 12 * 10
 }
+
+export const tarjetaVacia = { emisor: '', tipo: '', numero: '', titular: '', vencimiento: '', cvv: '', debitoAutomatico: true }
+
+export const revisarNumeroTarjeta = (numero, emisorId) => {
+  const n = soloNumeros(numero)
+  const red = detectarRed(n)
+  const emisor = emisores.find((e) => e.id === emisorId)
+  if (!red) return 'No reconocemos la red de la tarjeta (Visa, Mastercard o American Express).'
+  if (emisor && !emisor.redes.includes(red)) return `${emisor.nombre} no acepta tarjetas ${redesTarjeta[red].nombre}.`
+  if (n.length !== redesTarjeta[red].largo) return `Una tarjeta ${redesTarjeta[red].nombre} tiene ${redesTarjeta[red].largo} números.`
+  if (!pasaLuhn(n)) return 'El número de tarjeta no es válido. Revisalo.'
+  return ''
+}
+
+export const erroresTarjeta = (tarjeta) => {
+  const red = detectarRed(tarjeta.numero)
+  return {
+    emisor: !tarjeta.emisor,
+    tipo: !tarjeta.tipo,
+    numero: Boolean(revisarNumeroTarjeta(tarjeta.numero, tarjeta.emisor)),
+    titular: tarjeta.titular.trim().length < 3,
+    vencimiento: !vencimientoValido(tarjeta.vencimiento),
+    cvv: tarjeta.cvv.length !== (red ? redesTarjeta[red].cvv : 3),
+  }
+}
+
+// Solo se guarda lo necesario para identificar la tarjeta, nunca el número completo ni el código
+export const resumirTarjeta = (tarjeta) => ({
+  tipo: 'tarjeta',
+  debitoAutomatico: tarjeta.debitoAutomatico,
+  emisor: tarjeta.emisor,
+  red: detectarRed(tarjeta.numero),
+  ultimos4: soloNumeros(tarjeta.numero).slice(-4),
+})

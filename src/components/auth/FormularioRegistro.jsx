@@ -7,9 +7,8 @@ import CamaraSelfie from './CamaraSelfie'
 import OpcionPago from './OpcionPago'
 import CampoContrasena from './CampoContrasena'
 import DatosTarjeta from './DatosTarjeta'
-import { emisores, redesTarjeta } from '../../data/pagos'
 import { contactoClub } from '../../data/club'
-import { detectarRed, pasaLuhn, soloNumeros, vencimientoValido } from '../../utils/tarjetas'
+import { erroresTarjeta, resumirTarjeta, revisarNumeroTarjeta, tarjetaVacia } from '../../utils/tarjetas'
 import { leerDni } from '../../utils/leerDni'
 import { buscarDuplicado, guardarSocio } from '../../utils/socios'
 import { tarjetaVidrio } from './estilosAuth'
@@ -38,18 +37,6 @@ const mediosPago = [
 ]
 
 const vacio = { nombre: '', dni: '', fechaNacimiento: '', direccion: '', telefono: '', email: '', contrasena: '', repetir: '' }
-const tarjetaVacia = { emisor: '', tipo: '', numero: '', titular: '', vencimiento: '', cvv: '' }
-
-const revisarNumero = (numero, emisorId) => {
-  const n = soloNumeros(numero)
-  const red = detectarRed(n)
-  const emisor = emisores.find((e) => e.id === emisorId)
-  if (!red) return 'No reconocemos la red de la tarjeta (Visa, Mastercard o American Express).'
-  if (emisor && !emisor.redes.includes(red)) return `${emisor.nombre} no acepta tarjetas ${redesTarjeta[red].nombre}.`
-  if (n.length !== redesTarjeta[red].largo) return `Una tarjeta ${redesTarjeta[red].nombre} tiene ${redesTarjeta[red].largo} números.`
-  if (!pasaLuhn(n)) return 'El número de tarjeta no es válido. Revisalo.'
-  return ''
-}
 
 function Titulo({ children }) {
   return <h2 className="h6 fw-bold text-uppercase mb-3">{children}</h2>
@@ -126,21 +113,13 @@ function FormularioRegistro() {
     pago: !pago,
     terminos: !terminos,
   }
-  const errorNumero = revisarNumero(tarjeta.numero, tarjeta.emisor)
-  if (pago === 'tarjeta') {
-    const red = detectarRed(tarjeta.numero)
-    Object.assign(errores, {
-      emisor: !tarjeta.emisor,
-      tipo: !tarjeta.tipo,
-      numero: Boolean(errorNumero),
-      titular: tarjeta.titular.trim().length < 3,
-      vencimiento: !vencimientoValido(tarjeta.vencimiento),
-      cvv: tarjeta.cvv.length !== (red ? redesTarjeta[red].cvv : 3),
-    })
-  }
+  const errorNumero = revisarNumeroTarjeta(tarjeta.numero, tarjeta.emisor)
+  if (pago === 'tarjeta') Object.assign(errores, erroresTarjeta(tarjeta))
   if (duplicado) errores[duplicado] = true
   const hayErrores = Object.values(errores).some(Boolean)
   const marcar = (campo) => validado && errores[campo]
+
+  const armarMedioPago = () => (pago === 'tarjeta' ? resumirTarjeta(tarjeta) : { tipo: 'efectivo', debitoAutomatico: false })
 
   const enviar = async (e) => {
     e.preventDefault()
@@ -154,7 +133,7 @@ function FormularioRegistro() {
       return
     }
     const { nombre, dni, fechaNacimiento, direccion, telefono, email } = datos
-    const socio = await guardarSocio({ nombre, dni, fechaNacimiento, direccion, telefono, email, pago, contrasena: datos.contrasena, foto: selfie })
+    const socio = await guardarSocio({ nombre, dni, fechaNacimiento, direccion, telefono, email, contrasena: datos.contrasena, foto: selfie, fotoActualizada: new Date().toISOString(), medioPago: armarMedioPago() })
     if (!socio) {
       setErrorGuardado(true)
       return
