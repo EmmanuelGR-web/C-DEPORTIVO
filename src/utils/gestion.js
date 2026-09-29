@@ -16,8 +16,6 @@ const leerEstados = () => {
   }
 }
 
-// Arma la lista de solicitudes a partir de lo que pasó en el sitio:
-// socios que se registraron y cambios que hicieron desde su panel, más algunas de ejemplo.
 export const listarSolicitudes = () => {
   const estados = leerEstados()
 
@@ -87,7 +85,6 @@ export const listarSolicitudes = () => {
 
 const enumerar = (lista) => (lista.length > 1 ? `${lista.slice(0, -1).join(', ')} y ${lista.at(-1)}` : lista[0])
 
-// Nombra los campos que cambió el socio, por ejemplo "su nombre y su fecha de nacimiento"
 const detalleIdentidad = (registro) => {
   const campos = enumerar(registro.cambios.map((c) => `su ${c.campo === 'DNI' ? 'DNI' : c.campo.toLowerCase()}`))
   if (registro.resuelto === 'Autorizado') return `El socio pidió cambiar ${campos}. El cambio ya se aplicó en su perfil y en su carnet.`
@@ -113,7 +110,6 @@ const avisarAlSocio = (solicitud, estado, motivo, revertidos = []) => {
   guardarHilos(socio.id, [hilo, ...leerHilos(socio)])
 }
 
-// Autoriza o rechaza una solicitud, avisa al socio por su bandeja y deja constancia de quién la revisó
 export const resolverSolicitud = (solicitud, estado, empleado, motivo = '') => {
   const revision = { estado, revisadoPor: `${empleado.nombre} (${empleado.codigo})`, fecha: new Date().toISOString(), motivo }
   try {
@@ -147,8 +143,6 @@ export const resolverSolicitud = (solicitud, estado, empleado, motivo = '') => {
   return true
 }
 
-// Conversaciones en las que escribió algún socio (no los avisos generales del club),
-// con la última actividad y si falta responder
 export const listarConversaciones = (perfiles) =>
   perfiles
     .flatMap((socio) =>

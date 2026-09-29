@@ -1,5 +1,3 @@
-// Simula el servicio de IA que lee el frente y el dorso del DNI.
-// En producción, acá se enviarían las dos fotos a una API de lectura de documentos.
 const datosLeidos = {
   nombre: 'Juan Pérez García',
   dni: '20.123.456',

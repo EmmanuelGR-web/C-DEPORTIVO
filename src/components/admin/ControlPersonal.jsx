@@ -34,7 +34,6 @@ function Descanso({ presencia }) {
   )
 }
 
-// Quién del personal está trabajando ahora y cuánto descanso lleva en el día. Se refresca solo.
 function ControlPersonal({ personal }) {
   const [ahora, setAhora] = useState(() => Date.now())
   const [grupo, setGrupo] = useState('')

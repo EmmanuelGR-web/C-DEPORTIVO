@@ -22,8 +22,6 @@ const agrupar = (cuotas, clave) =>
 
 const sumar = (cuotas, campo = 'monto') => cuotas.reduce((total, c) => total + c.pago[campo], 0)
 
-// Estado económico de un mes: lo cobrado, lo que falta cobrar y quién debe.
-// Solo cuentan los socios que ya estaban en el padrón ese mes.
 export const resumenEconomico = (perfiles, periodo) => {
   const cuotas = perfiles.map((perfil) => ({ perfil, pago: perfil.pagos.find((p) => p.periodo === periodo) })).filter((c) => c.pago)
   const cobradas = cuotas.filter((c) => c.pago.estado === 'Aprobado')

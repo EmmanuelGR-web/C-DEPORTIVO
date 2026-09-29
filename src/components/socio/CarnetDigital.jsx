@@ -4,7 +4,6 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { categorias } from '../../utils/categorias'
 import { barrasCarnet, idQrCarnet, textoQr } from '../../utils/carnet'
 
-// Forma de escudo: el retrato del socio queda "dentro" del escudo del club
 const iniciales = (nombre) =>
   nombre
     .split(' ')

@@ -1,6 +1,3 @@
-// Socios de ejemplo para que el padrón y las estadísticas del administrador tengan datos variados:
-// distintos años de alta (y por eso distinta categoría), medios de pago y situación de la cuota del mes.
-// Entran al portal con su correo y la contraseña "socio123" (guardada como huella SHA-256).
 const contrasenaCifrada = '637e7c5f2e791200a1688142f4fe61e137d9876fb52767286dd6355587ac870e'
 const tarjeta = (emisor, red, ultimos4, debitoAutomatico) => ({ tipo: 'tarjeta', emisor, red, ultimos4, debitoAutomatico })
 const efectivo = { tipo: 'efectivo', debitoAutomatico: false }
@@ -99,12 +96,10 @@ export const sociosEjemplo = [
   }),
 ]
 
-// Comprobante de muestra (una imagen SVG simple) para el pago que está en revisión
 const imagenComprobante = `data:image/svg+xml;utf8,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300"><rect width="480" height="300" fill="#fbf5ea"/><rect x="0" y="0" width="480" height="56" fill="#7a0f2e"/><text x="24" y="36" font-family="Arial" font-size="20" fill="#fff">Comprobante de transferencia</text><text x="24" y="104" font-family="Arial" font-size="16" fill="#1e1b24">Origen: Sofía Romero · Banco Macro</text><text x="24" y="136" font-family="Arial" font-size="16" fill="#1e1b24">Destino: Club Deportivo · CBU 0000003100012345678901</text><text x="24" y="168" font-family="Arial" font-size="16" fill="#1e1b24">Concepto: cuota social</text><text x="24" y="220" font-family="Arial" font-size="28" font-weight="bold" fill="#7a0f2e">$ 18.000</text><text x="24" y="270" font-family="Arial" font-size="13" fill="#6b6475">Operación N° 88412037 · Transferencia inmediata</text></svg>',
 )}`
 
-// Pagos del mes en curso ya informados por algunos socios de ejemplo (se arman con la fecha de hoy)
 const hoy = new Date()
 const periodo = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
 const diaDelMes = (dia) => `${periodo}-${String(Math.min(dia, hoy.getDate())).padStart(2, '0')}`

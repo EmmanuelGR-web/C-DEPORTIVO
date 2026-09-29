@@ -4,7 +4,6 @@ import { imagenCredencial } from './credencialImagen'
 
 const colores = { dark: [30, 27, 36], bordo: [122, 15, 46] }
 
-// Achica una imagen antes de meterla en el PDF, así el archivo pesa poco
 const imagenReducida = (ruta, anchoMaximo) =>
   new Promise((resolver) => {
     const imagen = new Image()
@@ -19,8 +18,6 @@ const imagenReducida = (ruta, anchoMaximo) =>
     imagen.src = ruta
   })
 
-// Credencial en tamaño real (85,6 × 54 mm, como una tarjeta bancaria) sobre una hoja A4 con marcas de corte.
-// La imagen se dibuja igual que en la app: mismas fuentes, retrato en forma de escudo y colores de la categoría.
 export const descargarCredencial = async (socio) => {
   const [{ jsPDF }, imagen] = await Promise.all([import('jspdf'), imagenCredencial(socio)])
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -76,7 +73,6 @@ export const descargarEstadoCuenta = async (socio, pagos, descripcionFiltro) => 
   doc.save(`estado-de-cuenta-${socio.numeroSocio}.pdf`)
 }
 
-// Resumen económico de un mes para contaduría: totales, composición de lo cobrado, morosos y evolución
 export const descargarResumenEconomico = async (resumen, evolucion, autor) => {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')])
   const escudo = await imagenReducida('/logo.png', 240)

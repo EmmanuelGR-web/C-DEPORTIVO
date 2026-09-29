@@ -2,7 +2,6 @@ import { ausenciaProgramada, ausenciaVigente, textoRegreso } from '../../utils/p
 import { colorEstado } from '../../utils/jornada'
 import { formatearFechaConAnio } from '../../utils/fechas'
 
-// Qué pasa hoy con una persona del personal: si está ausente (y cuándo vuelve) o su estado en vivo
 function SituacionAhora({ empleado, hoy, presencia }) {
   const ausencia = ausenciaVigente(empleado, hoy)
   const programada = ausenciaProgramada(empleado, hoy)

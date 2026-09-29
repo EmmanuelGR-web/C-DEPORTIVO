@@ -1,7 +1,5 @@
 import { empleadoDemo } from '../data/gestion'
 
-// Mensajes internos entre el personal y el administrador principal.
-// Cada hilo es con una persona del personal y guarda qué rol lo leyó, así cada uno ve sus "sin leer".
 const clave = 'mensajesInternos'
 
 export const correoDireccion = 'direccion@clubdeportivo.com.ar'
@@ -68,7 +66,6 @@ export const responderInterno = (rol, hiloId, datos) =>
     ),
   )
 
-// Crea un hilo con cada destinatario (uno solo, o varios si la administradora escribe a todo el personal)
 export const crearHilosInternos = (rol, { asunto, ...datos }, destinatarios) => {
   const nuevos = destinatarios.map(({ id, nombre, correo }) => {
     const empleado = { id, nombre, correo }

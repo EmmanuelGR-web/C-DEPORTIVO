@@ -16,7 +16,6 @@ const opcionesPago = [
   { valor: 'tarjeta', etiqueta: 'Tarjeta' },
 ]
 
-// La contraseña inicial es el DNI, igual que cuando se restablece; el socio la cambia desde su panel
 const contrasenaInicial = (dni) => normalizarDni(dni)
 
 function NuevoSocio({ empleado, onCreado }) {

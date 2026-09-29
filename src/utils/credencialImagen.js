@@ -1,8 +1,6 @@
 import { categorias } from './categorias'
 import { barrasCarnet, idQrCarnet } from './carnet'
 
-// Dibuja la credencial igual que en la app (mismas fuentes, retrato en forma de escudo,
-// degradé de la categoría y fondo de la hinchada) para usarla en el PDF imprimible.
 const ANCHO = 1712
 const ALTO = 1080
 const grafito = '#1e1b24'
@@ -81,14 +79,12 @@ export const imagenCredencial = async (socio) => {
   lienzo.height = ALTO
   const ctx = lienzo.getContext('2d')
 
-  // Fondo blanco (el del papel) detrás de las esquinas redondeadas
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, ANCHO, ALTO)
   ctx.beginPath()
   ctx.roundRect(0, 0, ANCHO, ALTO, 56)
   ctx.clip()
 
-  // Cuerpo: hinchada con velo blanco (recortada a su zona para que no tape el encabezado)
   const altoEncabezado = 210
   ctx.save()
   ctx.beginPath()
@@ -99,7 +95,6 @@ export const imagenCredencial = async (socio) => {
   ctx.fillRect(0, altoEncabezado, ANCHO, ALTO - altoEncabezado)
   ctx.restore()
 
-  // Encabezado con el metal de la categoría
   ctx.fillStyle = degradadoCategoria(ctx, 0, 0, ANCHO, altoEncabezado, categoria.tonos)
   ctx.fillRect(0, 0, ANCHO, altoEncabezado)
   escribir(ctx, `SOCIO ${socio.categoria.toUpperCase()}`, 70, 85, { fuente: '700 34px Rajdhani', color: colorEncabezado, espaciado: 9 })
@@ -113,7 +108,6 @@ export const imagenCredencial = async (socio) => {
   dibujarCubriendo(ctx, escudo, ANCHO - 200, 30, 150, 150)
   ctx.restore()
 
-  // Retrato en forma de escudo con doble marco
   const [rx, ry, rw, rh] = [70, 265, 280, 345]
   caminoEscudo(ctx, rx, ry, rw, rh)
   ctx.fillStyle = degradadoCategoria(ctx, rx, ry, rw, rh, categoria.tonos)
@@ -130,7 +124,6 @@ export const imagenCredencial = async (socio) => {
   else escribir(ctx, iniciales(socio.nombre), rx + rw / 2, ry + rh / 2 + 20, { fuente: '700 90px Rajdhani', color: '#ffffff', alinear: 'center' })
   ctx.restore()
 
-  // Datos
   const dx = 420
   const etiqueta = (texto, x, y) => escribir(ctx, texto, x, y, { fuente: '600 24px Rajdhani', color: gris, espaciado: 5 })
   const valor = (texto, x, y, mono) => escribir(ctx, String(texto).toUpperCase(), x, y, { fuente: mono ? '700 50px "JetBrains Mono"' : '700 52px Rajdhani' })
@@ -143,7 +136,6 @@ export const imagenCredencial = async (socio) => {
   etiqueta('ESTADO', dx + 260, 575)
   valor(socio.estado, dx + 260, 630)
 
-  // QR en recuadro blanco
   const qr = document.getElementById(idQrCarnet)
   ctx.fillStyle = '#ffffff'
   ctx.beginPath()
@@ -151,7 +143,6 @@ export const imagenCredencial = async (socio) => {
   ctx.fill()
   if (qr) ctx.drawImage(qr, ANCHO - 365, 290, 270, 270)
 
-  // Código de barras y número
   const barras = barrasCarnet(socio.numeroSocio)
   const total = barras.reduce((suma, b) => suma + b.ancho, 0)
   const [bx, by, bw, bh] = [70, 745, ANCHO - 140, 130]

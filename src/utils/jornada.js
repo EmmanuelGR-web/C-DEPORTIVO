@@ -1,14 +1,10 @@
 import { diasLaborales, empleadoDemo } from '../data/gestion'
 
-// Jornada del día de cada empleado: cuándo ingresó, sus descansos y su última actividad en el portal.
-// El panel del personal avisa que sigue abierto cada 20 segundos; si pasa más de un minuto y medio
-// sin avisar (cerró la pestaña sin salir), figura "Sin conexión".
 const minuto = 60 * 1000
 export const descansoPermitido = 30 * minuto
 export const intervaloActividad = 20 * 1000
 const limiteConexion = 90 * 1000
 
-// Solo el usuario de prueba del personal entra al portal; la jornada del resto se simula con su horario
 const conPortal = [empleadoDemo.id]
 
 const fechaLocal = (ms) => {
@@ -56,7 +52,6 @@ export const terminarDescanso = (id, ahora = Date.now()) => {
   return guardar(id, { ...j, estado: 'trabajando', ultimaActividad: ahora, descansos: cerrarAbiertos(j.descansos, ahora) }, ahora)
 }
 
-// Cerrar sesión deja la jornada abierta ("Salió del portal"); terminar la jornada marca el fin del día
 export const registrarSalida = (id, terminada = false, ahora = Date.now()) => {
   const j = leerJornadas(ahora)[id]
   if (!j || j.estado === 'fuera') return false
@@ -69,8 +64,6 @@ const aMinutos = (hora) => {
 }
 const semilla = (texto) => [...texto].reduce((total, letra) => total + letra.charCodeAt(0), 0)
 
-// Jornada inventada a partir del horario: llega unos minutos antes o después, hace un descanso
-// de 20 a 40 minutos a mitad de turno (algunos se pasan de los 30) y se va al terminar.
 const jornadaSimulada = (empleado, ahora) => {
   const hoy = new Date(ahora)
   if (!diasLaborales[empleado.dias]?.includes(hoy.getDay())) return { franco: true }
@@ -151,10 +144,8 @@ export const hace = (ms, ahora) => {
   return minutos < 60 ? `hace ${minutos} min` : `hace ${textoDuracion(ahora - ms)}`
 }
 
-// Colores del punto de estado: verde en línea, dorado en descanso, gris el resto
 export const colorEstado = { linea: 'success', descanso: 'warning', sinConexion: 'danger', fuera: 'secondary', termino: 'secondary', sinIngresar: 'secondary', franco: 'secondary' }
 
-// Resumen que ve el empleado en el login después de terminar su jornada
 const claveAviso = 'avisoFinJornada'
 
 export const guardarAvisoSalida = (texto) => {

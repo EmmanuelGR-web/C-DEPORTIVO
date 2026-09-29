@@ -48,7 +48,6 @@ function Seccion({ numero, titulo, children }) {
   )
 }
 
-// Alta o edición de una persona del personal. Si recibe `empleado`, edita; si no, da de alta.
 function FormularioPersonal({ empleado, onCerrar, onGuardar }) {
   const [datos, setDatos] = useState(() => (empleado ? { ...vacio, ...empleado } : vacio))
   const [errores, setErrores] = useState({})

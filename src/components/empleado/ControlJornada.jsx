@@ -16,7 +16,6 @@ import {
   textoDuracion,
 } from '../../utils/jornada'
 
-// Barra de la jornada del empleado: avisa que está conectado, le permite tomar su descanso y marcar su salida
 function ControlJornada({ empleado }) {
   const { cerrarSesion } = useSesion()
   const [ahora, setAhora] = useState(() => Date.now())

@@ -1,5 +1,3 @@
-// Nombres claros para cada tipo de cambio. En la auditoría se guarda la sección original
-// ("Datos personales", "Datos de identidad"...); acá se traduce a lo que cambió de verdad.
 const camposDocumento = ['Nombre', 'DNI', 'Fecha de nacimiento']
 
 export const tiposCambio = [
@@ -52,7 +50,6 @@ export const tipoDeRegistro = (registro) => {
 
 export const esDelSocio = (registro) => registro.autor === 'Socio'
 
-// Estado de los cambios de nombre/DNI que pidió el socio
 export const estadoPedido = (registro) => (registro.pendiente ? (registro.resuelto ?? 'Esperando aprobación') : null)
 
 export const tituloSolicitud = (registro) => registro.seccion.replace('Solicitud: ', '')

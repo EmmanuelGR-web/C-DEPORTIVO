@@ -3,8 +3,6 @@ import OpcionesPildora from './OpcionesPildora'
 import { diaSiguiente, enActividadTexto, motivosAusencia, sinCambiosTexto } from '../../utils/personal'
 import { formatearFechaConAnio } from '../../utils/fechas'
 
-// Situación de una persona del personal. `ausencia` es null (en actividad), un objeto con motivo y fechas,
-// o undefined cuando se ofrece "Sin cambios" (para modificar varias personas a la vez).
 function CamposAusencia({ id, ausencia, onCambiar, hoy, error, conSinCambios = false }) {
   const actual = ausencia === undefined ? sinCambiosTexto : (ausencia?.motivo ?? enActividadTexto)
   const opciones = [...(conSinCambios ? [sinCambiosTexto] : []), enActividadTexto, ...motivosAusencia]

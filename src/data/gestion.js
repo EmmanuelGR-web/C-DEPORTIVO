@@ -10,7 +10,6 @@ export const empleadoDemo = {
   ingreso: '2019-03-01',
 }
 
-// Solicitudes de ejemplo, para que el panel no arranque vacío
 export const solicitudesDemo = [
   {
     id: 'demo-maria',

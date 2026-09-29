@@ -9,7 +9,6 @@ const iniciales = (nombre) =>
     .map((p) => p[0].toUpperCase())
     .join('') || '··'
 
-// Franja superior de los modales del personal: iniciales con aro dorado, nombre y datos del puesto
 function EncabezadoLegajo({ nombre, antetitulo, children, onCerrar }) {
   return (
     <header className="position-relative text-white px-4 px-md-5 pt-4 pb-4 border-bottom border-4 border-warning" style={fondoBordo}>

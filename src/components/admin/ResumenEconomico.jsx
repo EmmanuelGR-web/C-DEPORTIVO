@@ -39,7 +39,6 @@ function Composicion({ grupos, total }) {
   ))
 }
 
-// Estado económico del mes elegido, pensado para imprimir y llevar a contaduría
 function ResumenEconomico({ resumen, evolucion, autor, mostrar, onCerrar }) {
   const [generando, setGenerando] = useState(false)
   const [error, setError] = useState(false)

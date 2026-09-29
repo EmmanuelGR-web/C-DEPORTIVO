@@ -7,9 +7,6 @@ import { ausenciaVigente, fechaDeHoy, textoRegreso } from '../../utils/personal'
 
 const fechaCorta = (iso) => new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-// Bandeja interna entre el personal y el administrador principal. La usan los dos paneles:
-// `rol` indica desde qué lado se escribe. La administradora elige a quién escribirle (`personal`);
-// el empleado siempre le escribe a la dirección (`empleado` es quien está usando el panel).
 function MensajesInternos({ rol, hilos, onCambio, personal = [], empleado }) {
   const esAdmin = rol === 'admin'
   const [abierto, setAbierto] = useState(null)
