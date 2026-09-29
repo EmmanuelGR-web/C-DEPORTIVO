@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Offcanvas, Nav, Button, Fade, Image, CloseButton } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { FaBars } from 'react-icons/fa'
+import { useSesion } from '../../hooks/useSesion'
 
 function BarraNavegacion({ enlaces }) {
+  const { usuario } = useSesion()
   const [mostrar, setMostrar] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [esMobile, setEsMobile] = useState(false)
@@ -67,8 +69,8 @@ function BarraNavegacion({ enlaces }) {
             ))}
           </Nav>
 
-          <Button as={Link} to="/login" variant="primary" className={esMobile ? 'mt-4' : 'mt-auto'}>
-            Ingresar
+          <Button as={Link} to={usuario ? usuario.ruta : '/login'} variant="primary" className={esMobile ? 'mt-4' : 'mt-auto'}>
+            {usuario ? 'Mi panel' : 'Ingresar'}
           </Button>
         </Offcanvas.Body>
       </Offcanvas>
