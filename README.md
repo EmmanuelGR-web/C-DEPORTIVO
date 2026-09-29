@@ -21,6 +21,7 @@ En este nuevo repositorio proveché la migración para rediseñar varias partes.
 - **Recuperar contraseña** y opción de **mantener la sesión iniciada**.
 - **Registro de nuevo socio:** al subir las fotos del DNI, una lectura con IA (simulada) completa los datos personales, que el socio puede corregir. La selfie se saca con la cámara del dispositivo y queda guardada para el carnet digital. El pago puede ser en efectivo o con tarjeta (Banco Nación, Banco Macro, Mercado Pago o Ualá), validando la marca, el número, el vencimiento y el código según cada emisor.
 - **Los socios registrados pueden iniciar sesión:** se guardan en el navegador (`localStorage`) con la contraseña cifrada (SHA-256), sin repetir correo ni DNI. Como no hay backend, cada navegador tiene su propia lista.
+- **Panel del socio:** estado de la membresía y categoría automática según la antigüedad (Bronce hasta 2 años, Plata hasta 10, Oro más de 10); carnet digital con foto, QR y código de barras, descargable en PDF para imprimir; historial de pagos con filtros, orden por columna y descarga del estado de cuenta en PDF; edición de datos personales y del medio de pago (con o sin débito automático), con cada cambio registrado para administración; y bandeja de entrada con correo institucional, respuestas y archivos adjuntos.
 - **Diseño responsive** para celular, tablet y computadora.
 
 ### Usuarios de prueba
@@ -38,6 +39,8 @@ En este nuevo repositorio proveché la migración para rediseñar varias partes.
 - **React Router** para las rutas
 - **React Icons** para los íconos (redes sociales, marcas y disciplinas)
 - **react-pageflip** para el efecto de pasar las hojas de la revista
+- **qrcode.react** para el código QR del carnet digital
+- **jsPDF** y **jspdf-autotable** para descargar la credencial y el estado de cuenta en PDF
 - **Git y GitHub** para el control de versiones
 - **Vercel** para publicar el sitio
 

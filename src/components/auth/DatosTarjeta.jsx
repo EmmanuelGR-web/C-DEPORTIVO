@@ -1,5 +1,4 @@
 import { Form, Row, Col, InputGroup } from 'react-bootstrap'
-import { FaCreditCard, FaLock } from 'react-icons/fa'
 import { emisores, redesTarjeta } from '../../data/pagos'
 import { detectarRed, formatearNumero, formatearVencimiento, soloNumeros } from '../../utils/tarjetas'
 
@@ -21,7 +20,7 @@ function Logo({ icono: Icono, color, nombre, tamanio = 'fs-5' }) {
   )
 }
 
-function DatosTarjeta({ tarjeta, onCambiar, marcar, mensajes }) {
+function DatosTarjeta({ tarjeta, onCambiar, marcar, mensajes, conDebito = true }) {
   const emisor = emisores.find((e) => e.id === tarjeta.emisor)
   const red = detectarRed(tarjeta.numero)
   const largoCvv = red ? redesTarjeta[red].cvv : 3
@@ -84,7 +83,7 @@ function DatosTarjeta({ tarjeta, onCambiar, marcar, mensajes }) {
             isInvalid={marcar('numero')}
           />
           <InputGroup.Text className="bg-white px-2">
-            {red ? <Logo {...redesTarjeta[red]} tamanio="fs-3 px-0" /> : <FaCreditCard className="fs-3 text-body-tertiary" aria-label="Red no detectada" />}
+            {red ? <Logo {...redesTarjeta[red]} tamanio="fs-3 px-0" /> : <span className="small text-body-tertiary px-1">Marca</span>}
           </InputGroup.Text>
         </InputGroup>
       </Campo>
@@ -134,8 +133,19 @@ function DatosTarjeta({ tarjeta, onCambiar, marcar, mensajes }) {
         </Col>
       </Row>
 
+      {conDebito && (
+        <Form.Check
+          type="switch"
+          id="tarjeta-debito"
+          className="mb-3"
+          checked={tarjeta.debitoAutomatico}
+          onChange={(e) => onCambiar({ ...tarjeta, debitoAutomatico: e.target.checked })}
+          label="Debitar la cuota automáticamente cada mes"
+        />
+      )}
+
       <p className="small text-white-50 d-flex align-items-center gap-2 mb-0">
-        <FaLock aria-hidden="true" /> Simulación: los datos de la tarjeta no se guardan ni se envían.
+        Simulación: de la tarjeta solo se guardan la marca y los últimos 4 números.
       </p>
     </div>
   )
