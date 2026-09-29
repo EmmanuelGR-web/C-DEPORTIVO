@@ -23,13 +23,13 @@ function FormularioLogin() {
   const emailInvalido = validado && !/^\S+@\S+\.\S+$/.test(email)
   const contrasenaInvalida = validado && contrasena.length < 6
 
-  const enviar = (e) => {
+  const enviar = async (e) => {
     e.preventDefault()
     setError(false)
     setValidado(true)
     if (!/^\S+@\S+\.\S+$/.test(email) || contrasena.length < 6) return
 
-    const usuario = iniciarSesion(email, contrasena, recordar)
+    const usuario = await iniciarSesion(email, contrasena, recordar)
     if (!usuario) {
       setError(true)
       return

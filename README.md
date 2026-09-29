@@ -19,6 +19,8 @@ En este nuevo repositorio proveché la migración para rediseñar varias partes.
 - **Menú lateral** con enlaces a cada sección y botón para ingresar al portal.
 - **Login con acceso por roles** (simulado, sin backend): cada usuario entra a su propio panel y las rutas de los paneles están protegidas.
 - **Recuperar contraseña** y opción de **mantener la sesión iniciada**.
+- **Registro de nuevo socio:** al subir las fotos del DNI, una lectura con IA (simulada) completa los datos personales, que el socio puede corregir. La selfie se saca con la cámara del dispositivo y queda guardada para el carnet digital. El pago puede ser en efectivo o con tarjeta (Banco Nación, Banco Macro, Mercado Pago o Ualá), validando la marca, el número, el vencimiento y el código según cada emisor.
+- **Los socios registrados pueden iniciar sesión:** se guardan en el navegador (`localStorage`) con la contraseña cifrada (SHA-256), sin repetir correo ni DNI. Como no hay backend, cada navegador tiene su propia lista.
 - **Diseño responsive** para celular, tablet y computadora.
 
 ### Usuarios de prueba
