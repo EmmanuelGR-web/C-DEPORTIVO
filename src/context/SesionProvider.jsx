@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SesionContext } from './SesionContext'
 import { usuariosDemo } from '../data/usuarios'
+import { normalizarEmail, validarSocio } from '../utils/socios'
 
 const clave = 'sesionClub'
 
@@ -16,14 +17,14 @@ const leerSesion = () => {
 function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(leerSesion)
 
-  const iniciarSesion = (email, contrasena, recordar) => {
-    const encontrado = usuariosDemo.find(
-      (u) => u.email === email.trim().toLowerCase() && u.contrasena === contrasena,
-    )
-    if (!encontrado) return null
+  const iniciarSesion = async (email, contrasena, recordar) => {
+    const demo = usuariosDemo.find((u) => u.email === normalizarEmail(email) && u.contrasena === contrasena)
+    const socio = demo ? null : await validarSocio(email, contrasena)
+    if (!demo && !socio) return null
 
-    const { nombre, rol, rolTexto, ruta } = encontrado
-    const datos = { nombre, email: encontrado.email, rol, rolTexto, ruta }
+    const datos = demo
+      ? { nombre: demo.nombre, email: demo.email, rol: demo.rol, rolTexto: demo.rolTexto, ruta: demo.ruta }
+      : { id: socio.id, nombre: socio.nombre, email: socio.email, rol: 'socio', rolTexto: 'Socio', ruta: '/socio' }
     const almacen = recordar ? localStorage : sessionStorage
     almacen.setItem(clave, JSON.stringify(datos))
     setUsuario(datos)

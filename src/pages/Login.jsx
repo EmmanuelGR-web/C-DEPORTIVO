@@ -6,11 +6,7 @@ import { useSesion } from '../hooks/useSesion'
 import { useEsEscritorio } from '../hooks/useEsEscritorio'
 import FormularioLogin from '../components/auth/FormularioLogin'
 import PiePagina from '../components/layout/PiePagina'
-
-const fondoElectrico = {
-  backgroundImage:
-    'radial-gradient(circle at 15% 10%, rgba(220, 20, 60, 0.35), transparent 45%), radial-gradient(circle at 40% 95%, rgba(227, 178, 60, 0.12), transparent 40%)',
-}
+import { fondoElectrico, tarjetaVidrio } from '../components/auth/estilosAuth'
 
 const conScroll = { overflowY: 'scroll', scrollbarWidth: 'thin', scrollbarColor: '#8b0e25 transparent' }
 
@@ -60,7 +56,7 @@ function Login() {
         <h1 className="h4 fw-bold fst-italic mb-0">Ingresá al portal con tu cuenta</h1>
       </header>
 
-      <div className="bg-white bg-opacity-10 border border-light border-opacity-25 rounded-4 shadow-lg p-4">
+      <div className={`${tarjetaVidrio} p-4`}>
         <FormularioLogin />
       </div>
     </div>
