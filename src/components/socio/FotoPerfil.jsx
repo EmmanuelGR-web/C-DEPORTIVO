@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert } from 'react-bootstrap'
-import Tarjeta from './Tarjeta'
+import Tarjeta from '../common/Tarjeta'
 import CamaraSelfie from '../auth/CamaraSelfie'
 import { mesesEntreCambiosDeFoto, proximoCambioDeFoto } from '../../utils/perfilSocio'
 import { formatearFechaConAnio } from '../../utils/fechas'

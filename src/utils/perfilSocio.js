@@ -1,7 +1,8 @@
 import { socioDemo } from '../data/socio'
-import { leerSocios, actualizarSocio } from './socios'
+import { leerSocios, actualizarSocio, normalizarDni } from './socios'
 import { categoriaPorAntiguedad, cuotaPorCategoria } from './categorias'
-import { registrarCambios } from './auditoria'
+import { leerAuditoria, registrarCambios } from './auditoria'
+import { calcularCuota, leerInformes, vencimientoDe, vencimientoInicial } from './cuotas'
 
 const claveDemo = 'socioDemoEditado'
 const aniosEntre = (desde, hasta) => (hasta - desde) / (365.25 * 24 * 3600 * 1000)
@@ -11,9 +12,11 @@ const quitarAcentos = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]
 
 export const correoAdministracion = 'administracion@clubdeportivo.com.ar'
 
-export const correoInstitucional = (nombre) => {
+// Nombre y apellido más los últimos 4 números de socio, así dos socios con el mismo nombre no comparten correo
+export const correoInstitucional = (nombre, numeroSocio = '') => {
   const partes = quitarAcentos(nombre).toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter(Boolean)
-  return `${partes.slice(0, 2).join('.')}@socios.clubdeportivo.com.ar`
+  const sufijo = numeroSocio ? `.${numeroSocio.slice(-4)}` : ''
+  return `${partes.slice(0, 2).join('.')}${sufijo}@socios.clubdeportivo.com.ar`
 }
 
 export const textoMedio = (medio) => (medio.tipo === 'tarjeta' ? 'Tarjeta' : 'Efectivo')
@@ -37,25 +40,54 @@ const datosBase = (usuario) => {
   }
 }
 
-// Una cuota por mes desde el alta hasta hoy. El mes actual queda pendiente salvo que tenga débito automático
+// Una cuota por mes desde el alta hasta hoy. Los meses anteriores figuran pagos en término.
+// El mes actual: con débito automático se cobra solo; si no, queda pendiente (o vencido después del 15)
+// hasta que el socio informe el pago y el personal apruebe el comprobante.
 const generarPagos = (base, hoy) => {
   const alta = new Date(base.fechaAlta)
+  const informes = leerInformes(base.id)
+  const debita = base.medioPago.tipo === 'tarjeta' && base.medioPago.debitoAutomatico
   const pagos = []
   const mes = new Date(alta.getFullYear(), alta.getMonth(), 1)
   let indice = 0
   while (mes <= hoy) {
-    const esActual = mes.getFullYear() === hoy.getFullYear() && mes.getMonth() === hoy.getMonth()
+    const anio = mes.getFullYear()
+    const numeroMes = mes.getMonth()
+    const periodo = `${anio}-${String(numeroMes + 1).padStart(2, '0')}`
+    const esActual = anio === hoy.getFullYear() && numeroMes === hoy.getMonth()
     const recientes = aniosEntre(mes, hoy) < 0.5
-    const debita = base.medioPago.tipo === 'tarjeta' && base.medioPago.debitoAutomatico
-    pagos.push({
-      id: `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}`,
-      fecha: `${String(mes.getMonth() + 1).padStart(2, '0')}/${mes.getFullYear()}`,
-      anio: mes.getFullYear(),
+    const vence = indice === 0 ? vencimientoInicial(base.fechaAlta) : vencimientoDe(anio, numeroMes)
+    const montoBase = cuotaPorCategoria[categoriaPorAntiguedad(aniosEntre(alta, mes))] * (indice === 0 ? 2 : 1)
+    const pago = {
+      id: periodo,
+      periodo,
+      fecha: `${String(numeroMes + 1).padStart(2, '0')}/${anio}`,
+      anio,
       concepto: indice === 0 ? 'Inscripción y cuota' : 'Cuota mensual',
       medio: recientes || base.esRegistrado ? textoMedio(base.medioPago) : mediosHistoricos[indice % 3],
-      monto: cuotaPorCategoria[categoriaPorAntiguedad(aniosEntre(alta, mes))] * (indice === 0 ? 2 : 1),
-      estado: esActual && !debita ? 'Pendiente' : 'Aprobado',
-    })
+      base: montoBase,
+      recargo: 0,
+      diasDemora: 0,
+      monto: montoBase,
+      estado: 'Aprobado',
+      vence: vence.toISOString(),
+    }
+
+    if (esActual && !debita) {
+      const informe = informes[periodo]
+      const informado = informe && informe.estado !== 'Rechazado'
+      const cuota = calcularCuota(montoBase, anio, numeroMes, informado ? new Date(`${informe.fechaPago}T12:00:00`) : hoy, vence)
+      Object.assign(pago, {
+        recargo: cuota.recargo,
+        diasDemora: cuota.dias,
+        monto: cuota.total,
+        estado: informado ? (informe.estado === 'Aprobado' ? 'Aprobado' : 'En revisión') : cuota.dias > 0 ? 'Vencido' : 'Pendiente',
+        medio: informado ? informe.medio : pago.medio,
+        comprobante: informe?.comprobante ?? null,
+        informe: informe ?? null,
+      })
+    }
+    pagos.push(pago)
     mes.setMonth(mes.getMonth() + 1)
     indice += 1
   }
@@ -71,11 +103,16 @@ export const perfilSocio = (usuario, hoy = new Date()) => {
     fotoActualizada: base.fotoActualizada ?? (base.foto ? base.fechaAlta : null),
     antiguedadAnios: anios,
     categoria: categoriaPorAntiguedad(anios),
-    estado: base.esRegistrado ? 'En validación' : 'Activo',
-    correoInstitucional: correoInstitucional(base.nombre),
+    estado: base.esRegistrado ? (base.estado ?? 'En validación') : 'Activo',
+    correoInstitucional: correoInstitucional(base.nombre, base.esRegistrado ? base.numeroSocio : ''),
     pagos: generarPagos(base, hoy),
+    identidadPendiente: leerAuditoria(base.id).find((r) => r.pendiente && !r.resuelto) ?? null,
   }
 }
+
+// Nombre, DNI y fecha de nacimiento son datos de identidad: si los cambia el socio,
+// quedan pendientes hasta que el personal los apruebe comparándolos con el DNI
+export const camposIdentidad = ['nombre', 'dni', 'fechaNacimiento']
 
 const nombresCampo = {
   nombre: 'Nombre',
@@ -98,24 +135,76 @@ const describir = (campo, valor) => {
 }
 
 // Guarda los cambios del socio y deja constancia en la auditoría
-export const guardarCambiosSocio = (perfil, cambios, seccion) => {
-  const diferencias = Object.entries(cambios)
-    .filter(([campo, valor]) => nombresCampo[campo] && JSON.stringify(perfil[campo]) !== JSON.stringify(valor))
-    .map(([campo, valor]) => ({ campo: nombresCampo[campo], anterior: describir(campo, perfil[campo]), nuevo: describir(campo, valor) }))
-  if (diferencias.length === 0) return false
+// Devuelve false si no hubo cambios, true si se aplicaron y 'pendiente' si hay datos de identidad esperando aprobación
+export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'Socio') => {
+  const cambios = cambiosPedidos.dni ? { ...cambiosPedidos, dni: normalizarDni(cambiosPedidos.dni) } : cambiosPedidos
+  const distintos = Object.entries(cambios).filter(([campo, nuevo]) => JSON.stringify(perfil[campo] ?? null) !== JSON.stringify(nuevo))
+  const esIdentidad = ([campo]) => autor === 'Socio' && camposIdentidad.includes(campo)
+  const inmediatos = distintos.filter((c) => !esIdentidad(c))
+  const aAprobar = distintos.filter(esIdentidad)
 
-  if (perfil.esRegistrado) {
-    actualizarSocio(perfil.id, cambios)
-  } else {
-    try {
-      const guardados = JSON.parse(localStorage.getItem(claveDemo)) ?? {}
-      localStorage.setItem(claveDemo, JSON.stringify({ ...guardados, ...cambios }))
-    } catch {
-      return false
-    }
+  const registrar = (lista, extra) => {
+    const visibles = lista.filter(([campo]) => nombresCampo[campo])
+    if (visibles.length === 0) return
+    registrarCambios({
+      socioId: perfil.id,
+      socioNombre: perfil.nombre,
+      autor,
+      cambios: visibles.map(([campo, nuevo]) => ({ campo: nombresCampo[campo], anterior: describir(campo, perfil[campo]), nuevo: describir(campo, nuevo) })),
+      valores: Object.fromEntries(lista.map(([campo, nuevo]) => [campo, { anterior: perfil[campo] ?? null, nuevo }])),
+      ...extra,
+    })
   }
-  registrarCambios({ socioId: perfil.id, socioNombre: perfil.nombre, seccion, cambios: diferencias })
-  return true
+
+  if (inmediatos.filter(([campo]) => nombresCampo[campo]).length > 0) {
+    if (!aplicarCambios(perfil, Object.fromEntries(inmediatos))) return false
+    registrar(inmediatos, { seccion })
+  }
+  if (aAprobar.length > 0) registrar(aAprobar, { seccion: 'Datos de identidad', pendiente: true })
+
+  if (aAprobar.length > 0) return 'pendiente'
+  return inmediatos.some(([campo]) => nombresCampo[campo])
+}
+
+// El personal aprobó un cambio de identidad pedido por el socio: recién ahí se aplica
+export const aplicarIdentidad = (socioId, valores) => {
+  const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
+  return aplicarCambios(perfil, Object.fromEntries(Object.entries(valores).map(([campo, v]) => [campo, v.nuevo])))
+}
+
+const aplicarCambios = (perfil, cambios) => {
+  if (perfil.esRegistrado) return actualizarSocio(perfil.id, cambios)
+  try {
+    const guardados = JSON.parse(localStorage.getItem(claveDemo)) ?? {}
+    localStorage.setItem(claveDemo, JSON.stringify({ ...guardados, ...cambios }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Vuelve a poner los valores anteriores de un cambio rechazado. Si el socio ya volvió a modificar
+// ese dato después, no lo pisa: solo revierte los campos que siguen con el valor rechazado.
+export const revertirCambios = (socioId, valores, autor) => {
+  const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
+  const aRevertir = Object.fromEntries(
+    Object.entries(valores)
+      .filter(([, v]) => JSON.stringify(v.anterior) !== JSON.stringify(v.nuevo))
+      .filter(([campo, v]) => campo === 'fotoActualizada' || JSON.stringify(perfil[campo] ?? null) === JSON.stringify(v.nuevo))
+      .map(([campo, v]) => [campo, v.anterior]),
+  )
+  const visibles = Object.keys(aRevertir).filter((campo) => nombresCampo[campo])
+  if (visibles.length === 0) return { revertidos: [] }
+  if (!aplicarCambios(perfil, aRevertir)) return { revertidos: [], error: true }
+
+  registrarCambios({
+    socioId: perfil.id,
+    socioNombre: perfil.nombre,
+    seccion: 'Cambio revertido',
+    autor,
+    cambios: visibles.map((campo) => ({ campo: nombresCampo[campo], anterior: describir(campo, perfil[campo]), nuevo: describir(campo, aRevertir[campo]) })),
+  })
+  return { revertidos: visibles.map((campo) => nombresCampo[campo]) }
 }
 
 export const mesesEntreCambiosDeFoto = 6
@@ -127,3 +216,6 @@ export const proximoCambioDeFoto = (perfil, hoy = new Date()) => {
   habilitada.setMonth(habilitada.getMonth() + mesesEntreCambiosDeFoto)
   return habilitada > hoy ? habilitada : null
 }
+
+// Todos los socios de este navegador (el de prueba y los registrados), con su perfil completo
+export const listarPerfiles = () => [perfilSocio({}), ...leerSocios().map((s) => perfilSocio({ id: s.id }))]

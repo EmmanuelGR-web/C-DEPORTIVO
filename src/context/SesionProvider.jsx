@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { SesionContext } from './SesionContext'
 import { usuariosDemo } from '../data/usuarios'
-import { normalizarEmail, validarSocio } from '../utils/socios'
+import { normalizarEmail, validarContrasenaDemo, validarSocio } from '../utils/socios'
 
 const clave = 'sesionClub'
 
@@ -18,7 +18,8 @@ function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(leerSesion)
 
   const iniciarSesion = async (email, contrasena, recordar) => {
-    const demo = usuariosDemo.find((u) => u.email === normalizarEmail(email) && u.contrasena === contrasena)
+    const candidato = usuariosDemo.find((u) => u.email === normalizarEmail(email))
+    const demo = candidato && (await validarContrasenaDemo(candidato, contrasena)) ? candidato : null
     const socio = demo ? null : await validarSocio(email, contrasena)
     if (!demo && !socio) return null
 

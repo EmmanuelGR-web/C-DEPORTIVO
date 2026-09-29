@@ -2,30 +2,9 @@ import { useState } from 'react'
 import { Row, Col, Button, Badge, ListGroup } from 'react-bootstrap'
 import Redactor from './Redactor'
 import { correoAdministracion } from '../../utils/perfilSocio'
-import { tamanioLegible } from '../../utils/mensajes'
+import MensajeHilo from '../common/MensajeHilo'
 
 const fechaHora = (iso) => new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-
-function Mensaje({ mensaje, propio }) {
-  return (
-    <div className={`d-flex ${propio ? 'justify-content-end' : ''}`}>
-      <div className={`rounded-4 p-3 mb-3 ${propio ? 'bg-primary-subtle' : 'bg-body-tertiary'}`} style={{ maxWidth: '85%' }}>
-        <div className="small text-body-secondary text-break mb-1">
-          <strong className="text-body">{propio ? 'Vos' : 'Administración'}</strong> · {mensaje.de} → {mensaje.para}
-        </div>
-        <p className="mb-2 text-break" style={{ whiteSpace: 'pre-line' }}>
-          {mensaje.texto}
-        </p>
-        {mensaje.adjuntos.map((a) => (
-          <a key={a.nombre} href={a.dataUrl} download={a.nombre} className="d-inline-block small link-secondary me-3">
-            Adjunto: {a.nombre} ({tamanioLegible(a.tamanio)})
-          </a>
-        ))}
-        <div className="small text-body-secondary text-end">{fechaHora(mensaje.fecha)}</div>
-      </div>
-    </div>
-  )
-}
 
 function Bandeja({ socio, hilos, onCambiar }) {
   const [abierto, setAbierto] = useState(null)
@@ -116,7 +95,7 @@ function Bandeja({ socio, hilos, onCambiar }) {
               <>
                 <h2 className="h5 fw-bold text-secondary mb-3">{hilo.asunto}</h2>
                 {hilo.mensajes.map((m) => (
-                  <Mensaje key={m.id} mensaje={m} propio={m.de !== correoAdministracion} />
+                  <MensajeHilo key={m.id} mensaje={m} propio={m.de !== correoAdministracion} nombreOtro="Administración" />
                 ))}
                 <div className="border-top pt-3">
                   <Redactor id={`responder-${hilo.id}`} textoBoton="Responder" onEnviar={responder} />

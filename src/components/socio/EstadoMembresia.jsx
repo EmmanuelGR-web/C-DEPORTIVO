@@ -1,4 +1,4 @@
-import Tarjeta from './Tarjeta'
+import Tarjeta from '../common/Tarjeta'
 import EstadoBadge from '../common/EstadoBadge'
 import { textoAntiguedad } from '../../utils/tiempo'
 import { formatearFechaConAnio } from '../../utils/fechas'

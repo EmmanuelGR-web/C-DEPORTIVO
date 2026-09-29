@@ -1,4 +1,4 @@
-import { FaThLarge, FaUser, FaFileInvoiceDollar, FaInbox } from 'react-icons/fa'
+import { FaThLarge, FaUser, FaFileInvoiceDollar, FaInbox, FaClipboardCheck, FaUsers, FaHistory, FaUserPlus, FaIdBadge, FaComments } from 'react-icons/fa'
 
 export const enlacesInicio = [
   { etiqueta: 'Inicio', href: '#inicio' },
@@ -14,4 +14,15 @@ export const menuSocio = [
   { id: 'datos', etiqueta: 'Datos personales', icono: FaUser },
   { id: 'pagos', etiqueta: 'Facturas y pagos', icono: FaFileInvoiceDollar },
   { id: 'bandeja', etiqueta: 'Bandeja de entrada', icono: FaInbox },
+]
+
+export const menuEmpleado = [
+  { id: 'resumen', etiqueta: 'Resumen de gestión', icono: FaThLarge },
+  { id: 'solicitudes', etiqueta: 'Solicitudes', icono: FaClipboardCheck },
+  { id: 'socios', etiqueta: 'Socios', icono: FaUsers },
+  { id: 'mensajes', etiqueta: 'Mensajes de socios', icono: FaInbox },
+  { id: 'cambios', etiqueta: 'Registro de cambios', icono: FaHistory },
+  { id: 'interno', etiqueta: 'Administración principal', icono: FaComments },
+  { id: 'nuevo', etiqueta: 'Nuevo socio', icono: FaUserPlus },
+  { id: 'datos', etiqueta: 'Mis datos', icono: FaIdBadge },
 ]

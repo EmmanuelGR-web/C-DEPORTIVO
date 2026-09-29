@@ -1,10 +1,19 @@
 import { useState } from 'react'
 import { Button } from 'react-bootstrap'
-import { FaBars } from 'react-icons/fa'
+import { FaBars, FaSyncAlt } from 'react-icons/fa'
 import BarraLateral from './BarraLateral'
 
-function PanelLayout({ titulo, children, ...propsBarra }) {
+const hora = (fecha) => fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+function PanelLayout({ titulo, children, onActualizar, actualizado, ...propsBarra }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [girando, setGirando] = useState(false)
+
+  const actualizar = () => {
+    onActualizar()
+    setGirando(true)
+    setTimeout(() => setGirando(false), 600)
+  }
 
   return (
     <div className="d-lg-flex min-vh-100 bg-body-tertiary">
@@ -13,11 +22,20 @@ function PanelLayout({ titulo, children, ...propsBarra }) {
       </div>
 
       <main className="flex-grow-1 p-3 p-md-4 p-xl-5 overflow-hidden">
-        <div className="d-flex align-items-center gap-3 mb-4">
+        <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
           <Button variant="secondary" className="d-lg-none" onClick={() => setMenuAbierto(true)} aria-label="Abrir menú del panel">
             <FaBars />
           </Button>
           <h1 className="h3 fw-bolder text-uppercase fst-italic text-secondary mb-0">{titulo}</h1>
+          {onActualizar && (
+            <div className="ms-auto d-flex align-items-center gap-2">
+              {actualizado && <small className="text-body-secondary d-none d-sm-inline">Actualizado {hora(actualizado)}</small>}
+              <Button variant="outline-secondary" size="sm" className="rounded-pill d-inline-flex align-items-center gap-2 px-3" onClick={actualizar} aria-label="Actualizar panel">
+                <FaSyncAlt aria-hidden="true" style={{ transition: 'transform 600ms ease', transform: girando ? 'rotate(360deg)' : 'none' }} />
+                Actualizar
+              </Button>
+            </div>
+          )}
         </div>
         {children}
       </main>
