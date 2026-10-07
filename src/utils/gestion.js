@@ -19,7 +19,7 @@ export const listarSolicitudes = () => {
   const estados = leerEstados()
 
   const altas = leerSocios()
-    .filter((s) => !s.cargaInicial)
+    .filter((s) => !s.cargaInicial || s.estado !== 'Activo')
     .map((s) => ({
       id: `alta-${s.id}`,
       tipo: 'Alta de socio',
