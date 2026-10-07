@@ -13,8 +13,13 @@ export const obtenerSocio = async (id) => {
 }
 
 export const buscarSocioPorEmail = async (email) => {
-  const { data } = await apiClub.get('/socios', { params: { email } })
-  return data.map(sinCamposDeMockApi).find((s) => s.email === email) ?? null
+  try {
+    const { data } = await apiClub.get('/socios', { params: { email } })
+    return data.map(sinCamposDeMockApi).find((s) => s.email === email) ?? null
+  } catch (problema) {
+    if (problema.estado === 404) return null
+    throw problema
+  }
 }
 
 export const crearSocio = async (socio) => {
