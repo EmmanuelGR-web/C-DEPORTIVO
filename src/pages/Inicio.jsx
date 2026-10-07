@@ -13,15 +13,23 @@ import BarraProgreso from '../components/common/BarraProgreso'
 import BotonVolverArriba from '../components/common/BotonVolverArriba'
 import { enlacesInicio } from '../data/menus'
 import { resumenResena, paginasRevista } from '../data/revista'
-import { noticias } from '../data/noticias'
-import { eventos } from '../data/eventos'
+import { listarNoticias } from '../services/noticiasApi'
+import { proximosPartidos, tablaPosiciones, ultimosResultados } from '../services/deportesApi'
+import { useConsulta } from '../hooks/useConsulta'
 import { disciplinas } from '../data/disciplinas'
 import { fotosGaleria } from '../data/galeria'
 import { contactoClub } from '../data/club'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 
+const consultarPartidos = async () => {
+  const [proximos, ultimos, tabla] = await Promise.all([proximosPartidos(), ultimosResultados(), tablaPosiciones()])
+  return { partidos: [...ultimos, ...proximos], tabla }
+}
+
 function Inicio() {
   useTituloPagina()
+  const noticias = useConsulta(listarNoticias)
+  const futbol = useConsulta(consultarPartidos)
 
   return (
     <>
@@ -39,7 +47,7 @@ function Inicio() {
             
             <Col lg={8} xl={9} className="d-flex flex-column gap-4">
               <ResenaHistorica resumen={resumenResena} paginas={paginasRevista} />
-              <Calendario eventos={eventos} />
+              <Calendario eventos={futbol.datos?.partidos ?? []} tabla={futbol.datos?.tabla ?? []} cargando={futbol.cargando} error={futbol.error} onReintentar={futbol.recargar} />
               <Row className="g-4">
                 <Col xl={6}>
                   <Disciplinas disciplinas={disciplinas} />
@@ -50,7 +58,7 @@ function Inicio() {
               </Row>
             </Col>
             <Col lg={4} xl={3}>
-              <Noticias noticias={noticias} />
+              <Noticias noticias={noticias.datos ?? []} cargando={noticias.cargando} error={noticias.error} onReintentar={noticias.recargar} />
             </Col>
           </Row>
         </Container>

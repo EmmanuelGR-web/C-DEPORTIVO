@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sembrar": "node --env-file=.env scripts/sembrar.js"
   },
   "dependencies": {
+    "axios": "^1.20.0",
     "bootstrap": "^5.3.8",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

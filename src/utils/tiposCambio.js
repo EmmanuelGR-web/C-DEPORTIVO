@@ -26,6 +26,7 @@ export const tiposCambio = [
     personal: 'rechazó y deshizo un cambio de',
   },
   { id: 'solicitud', etiqueta: 'Solicitud resuelta', ayuda: 'Solicitudes autorizadas o rechazadas.', socio: 'resolvió una solicitud', personal: 'resolvió una solicitud de' },
+  { id: 'baja', etiqueta: 'Baja de socio', ayuda: 'Socios dados de baja por la administración.', socio: 'fue dado de baja', personal: 'dio de baja a' },
   { id: 'alta', etiqueta: 'Alta en la sede', ayuda: 'Socios dados de alta por el personal.', socio: 'se asoció en la sede', personal: 'asoció en la sede a' },
 ]
 
@@ -37,6 +38,7 @@ const porSeccion = {
   Contraseña: 'clave',
   'Cambio revertido': 'deshecho',
   'Alta presencial': 'alta',
+  'Baja de socio': 'baja',
 }
 
 export const tipoDeRegistro = (registro) => {

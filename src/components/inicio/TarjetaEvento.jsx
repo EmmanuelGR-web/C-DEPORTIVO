@@ -30,6 +30,11 @@ function TarjetaEvento({ evento, onAbrir }) {
       <div className="p-3 d-flex flex-column gap-1 flex-grow-1">
         <span className="text-uppercase fw-bold text-primary small">{evento.disciplina}</span>
         <h3 className="h6 fw-bold mb-1">{evento.titulo}</h3>
+        {evento.jugado && (
+          <span className="badge bg-secondary align-self-start mb-1">
+            Final: {evento.local.goles} - {evento.visitante.goles}
+          </span>
+        )}
         <span className="small text-body-secondary d-flex align-items-center gap-2">
           <FaClock aria-hidden="true" /> {evento.hora} h
         </span>

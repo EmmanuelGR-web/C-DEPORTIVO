@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import { useDatosEnVivo } from '../hooks/useDatosEnVivo'
+import PantallaCarga from '../components/common/PantallaCarga'
 import PanelLayout from '../components/layout/PanelLayout'
 import ResumenAdmin from '../components/admin/ResumenAdmin'
 import GestionPersonal from '../components/admin/GestionPersonal'
 import Facturacion from '../components/admin/Facturacion'
 import ControlPersonal from '../components/admin/ControlPersonal'
+import GestionNoticias from '../components/admin/GestionNoticias'
 import ListaSocios from '../components/empleado/ListaSocios'
 import FichaSocio from '../components/empleado/FichaSocio'
 import RegistroCambios from '../components/empleado/RegistroCambios'
@@ -25,6 +27,7 @@ const titulos = {
   presencia: 'Control del personal',
   socios: 'Socios',
   facturacion: 'Facturación',
+  noticias: 'Noticias',
   reportes: 'Reportes',
   interno: 'Mensajes del personal',
 }
@@ -45,10 +48,8 @@ const leerTodo = () => {
   }
 }
 
-function PanelAdmin() {
-  useTituloPagina('Panel del administrador')
+function ContenidoAdmin({ datos, recargar, actualizado }) {
   const [seccion, setSeccion] = useState('resumen')
-  const [datos, recargar, actualizado] = useDatosEnVivo(leerTodo)
   const [fichaAbierta, setFichaAbierta] = useState(null)
 
   const ir = (id) => {
@@ -81,15 +82,23 @@ function PanelAdmin() {
       {seccion === 'personal' && <GestionPersonal personal={datos.personal} onCambio={recargar} />}
       {seccion === 'socios' &&
         (fichaAbierta ? (
-          <FichaSocio key={fichaAbierta} socioId={fichaAbierta} empleado={adminDemo} onVolver={() => setFichaAbierta(null)} onCambio={recargar} />
+          <FichaSocio key={fichaAbierta} socioId={fichaAbierta} empleado={adminDemo} onVolver={() => setFichaAbierta(null)} onCambio={recargar} puedeDarDeBaja />
         ) : (
           <ListaSocios perfiles={datos.perfiles} onAbrir={setFichaAbierta} />
         ))}
       {seccion === 'facturacion' && <Facturacion perfiles={datos.perfiles} autor={`${adminDemo.nombre} (${adminDemo.puesto})`} onAbrirFicha={abrirFicha} />}
+      {seccion === 'noticias' && <GestionNoticias />}
       {seccion === 'reportes' && <RegistroCambios registros={datos.registros} />}
       {seccion === 'interno' && <MensajesInternos rol="admin" hilos={datos.hilosInternos} onCambio={recargar} personal={datos.personal} />}
     </PanelLayout>
   )
+}
+
+function PanelAdmin() {
+  useTituloPagina('Panel del administrador')
+  const [datos, recargar, actualizado, error] = useDatosEnVivo(leerTodo)
+  if (!datos) return <PantallaCarga error={error} onReintentar={recargar} />
+  return <ContenidoAdmin datos={datos} recargar={recargar} actualizado={actualizado} />
 }
 
 export default PanelAdmin

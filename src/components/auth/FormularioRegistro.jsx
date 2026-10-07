@@ -12,7 +12,7 @@ import { erroresTarjeta, resumirTarjeta, revisarNumeroTarjeta, tarjetaVacia } fr
 import { camposCorregidos, leerConIA } from '../../utils/lecturaIA'
 import { leerAdjunto } from '../../utils/mensajes'
 import { formatearFechaConAnio } from '../../utils/fechas'
-import { buscarDuplicado, guardarSocio } from '../../utils/socios'
+import { buscarDuplicado, cargarSocios, guardarSocio } from '../../utils/socios'
 import { tarjetaVidrio } from './estilosAuth'
 
 const edadValida = (fecha) => {
@@ -178,6 +178,12 @@ function FormularioRegistro() {
     setErrorGuardado(false)
     if (hayErrores) return
 
+    try {
+      await cargarSocios()
+    } catch {
+      setErrorGuardado(true)
+      return
+    }
     const repetido = buscarDuplicado(datos)
     if (repetido) {
       setDuplicado(repetido)
@@ -232,7 +238,7 @@ function FormularioRegistro() {
       )}
       {errorGuardado && (
         <Alert variant="danger" className="py-2">
-          No pudimos guardar tu registro en este navegador. Probá liberar espacio o salir del modo privado.
+          No pudimos guardar tu registro en el servidor del club. Revisá tu conexión y probá de nuevo.
         </Alert>
       )}
 

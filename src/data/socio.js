@@ -1,17 +1,3 @@
-export const socioDemo = {
-  id: 'socio-demo',
-  nombre: 'Juan Pérez',
-  numeroSocio: '47867857',
-  dni: '12345678',
-  fechaNacimiento: '1990-06-15',
-  direccion: 'Av. Aconquija 1450, Yerba Buena',
-  telefono: '381 555-7788',
-  email: 'socio@club.com',
-  fechaAlta: '2020-03-10T12:00:00',
-  foto: null,
-  medioPago: { tipo: 'tarjeta', debitoAutomatico: true, emisor: 'macro', red: 'visa', ultimos4: '4242' },
-}
-
 export const beneficios = [
   { id: 'gimnasio', titulo: 'Acceso al gimnasio', detalle: 'Libre todos los días', extra: 'De 7 a 23 h, con profe incluido', descripcion: 'Usá la sala de musculación y el área funcional del club todos los días. Hay profes que arman tu rutina y clases grupales de funcional y spinning incluidas en la cuota.' },
   { id: 'tienda', titulo: 'Tienda oficial', detalle: '15 % de descuento', extra: 'En camisetas, buzos y accesorios', descripcion: 'Mostrá tu carnet digital en la tienda oficial de la sede o usá tu número de socio en la tienda online. El descuento se suma a las promociones del mes.' },

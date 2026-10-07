@@ -10,36 +10,6 @@ export const empleadoDemo = {
   ingreso: '2019-03-01',
 }
 
-export const solicitudesDemo = [
-  {
-    id: 'demo-maria',
-    tipo: 'Cambio de contacto o domicilio',
-    socioNombre: 'María López',
-    socioDni: '28456789',
-    fecha: '2026-09-26T11:20:00',
-    detalle: 'Pidió cambiar su dirección por mudanza.',
-    cambios: [{ campo: 'Dirección', anterior: 'San Martín 450, San Miguel de Tucumán', nuevo: 'Av. Perón 1200, Yerba Buena' }],
-  },
-  {
-    id: 'demo-ana',
-    tipo: 'Comprobante de pago',
-    socioNombre: 'Ana Gómez',
-    socioDni: '33102987',
-    fecha: '2026-09-27T16:05:00',
-    detalle: 'Envió el comprobante de la transferencia de la cuota de septiembre ($ 15.000).',
-    cambios: [],
-  },
-  {
-    id: 'demo-carlos',
-    tipo: 'Alta de socio',
-    socioNombre: 'Carlos Ruiz',
-    socioDni: '40555123',
-    fecha: '2026-09-28T09:40:00',
-    detalle: 'Se registró desde la web. Falta validar la identidad con las fotos del DNI.',
-    cambios: [],
-  },
-]
-
 export const adminDemo = {
   nombre: 'Laura Gómez',
   codigo: 'D01',
