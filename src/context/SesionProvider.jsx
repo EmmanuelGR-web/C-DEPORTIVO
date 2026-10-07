@@ -19,9 +19,16 @@ function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(leerSesion)
 
   const iniciarSesion = async (email, contrasena, recordar) => {
-    const candidato = usuariosDemo.find((u) => u.email === normalizarEmail(email))
+    const candidato = usuariosDemo.find((u) => u.email === normalizarEmail(email) && u.rol !== 'socio')
     const demo = candidato && (await validarContrasenaDemo(candidato, contrasena)) ? candidato : null
-    const socio = demo ? null : await validarSocio(email, contrasena)
+    let socio = null
+    if (!demo) {
+      try {
+        socio = await validarSocio(email, contrasena)
+      } catch (problema) {
+        return { errorConexion: problema.message }
+      }
+    }
     if (!demo && !socio) return null
     const ausencia = demo?.empleadoId && accesoRestringido(demo.empleadoId)
     if (ausencia) return { bloqueado: ausencia }

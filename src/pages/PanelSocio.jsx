@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useDatosEnVivo } from '../hooks/useDatosEnVivo'
+import PantallaCarga from '../components/common/PantallaCarga'
 import { Row, Col, Button, Alert } from 'react-bootstrap'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import { useSesion } from '../hooks/useSesion'
@@ -25,14 +26,7 @@ import { formatearPesos } from '../utils/carnet'
 
 const titulos = { resumen: 'Mi resumen', datos: 'Datos personales', pagos: 'Facturas y pagos', bandeja: 'Bandeja de entrada' }
 
-function PanelSocio() {
-  useTituloPagina('Panel del socio')
-  const { usuario } = useSesion()
-  const leer = useCallback(() => {
-    const perfil = perfilSocio(usuario)
-    return { socio: perfil, hilos: leerHilos(perfil) }
-  }, [usuario])
-  const [{ socio, hilos }, recargar, actualizado] = useDatosEnVivo(leer)
+function ContenidoSocio({ datos: { socio, hilos }, recargar, actualizado }) {
   const [seccion, setSeccion] = useState('resumen')
   const [descargando, setDescargando] = useState(false)
 
@@ -139,6 +133,31 @@ function PanelSocio() {
       {seccion === 'bandeja' && <Bandeja socio={socio} hilos={hilos} onCambiar={cambiarHilos} />}
     </PanelLayout>
   )
+}
+
+function PanelSocio() {
+  useTituloPagina('Panel del socio')
+  const { usuario, cerrarSesion } = useSesion()
+  const leer = useCallback(() => {
+    const perfil = perfilSocio(usuario)
+    return { socio: perfil, hilos: perfil ? leerHilos(perfil) : [] }
+  }, [usuario])
+  const [datos, recargar, actualizado, error] = useDatosEnVivo(leer)
+  if (!datos) return <PantallaCarga error={error} onReintentar={recargar} />
+  if (!datos.socio) {
+    return (
+      <div className="min-vh-100 bg-body-tertiary d-flex align-items-center justify-content-center p-3">
+        <Alert variant="warning" className="text-center" style={{ maxWidth: 420 }}>
+          <p className="fw-semibold">No encontramos tu cuenta de socio.</p>
+          <p className="small">Puede que se haya dado de baja. Comunicate con la secretaría del club.</p>
+          <Button variant="secondary" className="rounded-pill px-4" onClick={cerrarSesion}>
+            Cerrar sesión
+          </Button>
+        </Alert>
+      </div>
+    )
+  }
+  return <ContenidoSocio datos={datos} recargar={recargar} actualizado={actualizado} />
 }
 
 export default PanelSocio

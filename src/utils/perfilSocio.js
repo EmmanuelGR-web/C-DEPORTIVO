@@ -1,12 +1,9 @@
-import { socioDemo } from '../data/socio'
 import { leerSocios, actualizarSocio, normalizarDni } from './socios'
 import { categoriaPorAntiguedad, cuotaPorCategoria } from './categorias'
 import { leerAuditoria, registrarCambios } from './auditoria'
 import { calcularCuota, leerInformes, vencimientoDe, vencimientoInicial } from './cuotas'
 
-const claveDemo = 'socioDemoEditado'
 const aniosEntre = (desde, hasta) => (hasta - desde) / (365.25 * 24 * 3600 * 1000)
-const mediosHistoricos = ['Transferencia', 'Tarjeta', 'Efectivo']
 
 const quitarAcentos = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
@@ -24,17 +21,10 @@ export const correoInstitucional = (nombre, numeroSocio = '') => {
 
 export const textoMedio = (medio) => (medio.tipo === 'tarjeta' ? 'Tarjeta' : 'Efectivo')
 
-const leerDemo = () => {
-  try {
-    return { ...socioDemo, ...JSON.parse(localStorage.getItem(claveDemo)) }
-  } catch {
-    return socioDemo
-  }
-}
-
 const datosBase = (usuario) => {
-  const registrado = usuario.id && leerSocios().find((s) => s.id === usuario.id)
-  if (!registrado) return { ...leerDemo(), esDemo: true }
+  const socios = leerSocios()
+  const registrado = socios.find((s) => s.id === usuario.id) ?? (usuario.email ? socios.find((s) => s.email === usuario.email) : null)
+  if (!registrado) return null
   return {
     ...registrado,
     numeroSocio: String(new Date(registrado.fechaAlta).getTime()).slice(-8),
@@ -55,7 +45,6 @@ const generarPagos = (base, hoy) => {
     const numeroMes = mes.getMonth()
     const periodo = `${anio}-${String(numeroMes + 1).padStart(2, '0')}`
     const esActual = anio === hoy.getFullYear() && numeroMes === hoy.getMonth()
-    const recientes = aniosEntre(mes, hoy) < 0.5
     const vence = indice === 0 ? vencimientoInicial(base.fechaAlta) : vencimientoDe(anio, numeroMes)
     const montoBase = cuotaPorCategoria[categoriaPorAntiguedad(aniosEntre(alta, mes))] * (indice === 0 ? 2 : 1)
     const pago = {
@@ -64,7 +53,7 @@ const generarPagos = (base, hoy) => {
       fecha: `${String(numeroMes + 1).padStart(2, '0')}/${anio}`,
       anio,
       concepto: indice === 0 ? 'Inscripción y cuota' : 'Cuota mensual',
-      medio: recientes || base.esRegistrado ? textoMedio(base.medioPago) : mediosHistoricos[indice % 3],
+      medio: textoMedio(base.medioPago),
       base: montoBase,
       recargo: 0,
       diasDemora: 0,
@@ -96,6 +85,7 @@ const generarPagos = (base, hoy) => {
 
 export const perfilSocio = (usuario, hoy = new Date()) => {
   const base = datosBase(usuario)
+  if (!base) return null
   const anios = aniosEntre(new Date(base.fechaAlta), hoy)
   return {
     ...base,
@@ -103,8 +93,8 @@ export const perfilSocio = (usuario, hoy = new Date()) => {
     fotoActualizada: base.fotoActualizada ?? (base.foto ? base.fechaAlta : null),
     antiguedadAnios: anios,
     categoria: categoriaPorAntiguedad(anios),
-    estado: base.esRegistrado ? (base.estado ?? 'En validación') : 'Activo',
-    correoInstitucional: correoInstitucional(base.nombre, base.esRegistrado ? base.numeroSocio : ''),
+    estado: base.estado ?? 'En validación',
+    correoInstitucional: correoInstitucional(base.nombre, base.numeroSocio),
     pagos: generarPagos(base, hoy),
     identidadPendiente: leerAuditoria(base.id).find((r) => r.pendiente && !r.resuelto) ?? null,
   }
@@ -168,23 +158,16 @@ export const guardarCambiosSocio = (perfil, cambiosPedidos, seccion, autor = 'So
 }
 
 export const aplicarIdentidad = (socioId, valores) => {
-  const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
+  const perfil = perfilSocio({ id: socioId })
+  if (!perfil) return false
   return aplicarCambios(perfil, Object.fromEntries(Object.entries(valores).map(([campo, v]) => [campo, v.nuevo])))
 }
 
-const aplicarCambios = (perfil, cambios) => {
-  if (perfil.esRegistrado) return actualizarSocio(perfil.id, cambios)
-  try {
-    const guardados = JSON.parse(localStorage.getItem(claveDemo)) ?? {}
-    localStorage.setItem(claveDemo, JSON.stringify({ ...guardados, ...cambios }))
-    return true
-  } catch {
-    return false
-  }
-}
+const aplicarCambios = (perfil, cambios) => actualizarSocio(perfil.id, cambios)
 
 export const revertirCambios = (socioId, valores, autor) => {
-  const perfil = perfilSocio(socioId === socioDemo.id ? {} : { id: socioId })
+  const perfil = perfilSocio({ id: socioId })
+  if (!perfil) return { revertidos: [] }
   const aRevertir = Object.fromEntries(
     Object.entries(valores)
       .filter(([, v]) => JSON.stringify(v.anterior) !== JSON.stringify(v.nuevo))
@@ -214,4 +197,4 @@ export const proximoCambioDeFoto = (perfil, hoy = new Date()) => {
   return habilitada > hoy ? habilitada : null
 }
 
-export const listarPerfiles = () => [perfilSocio({}), ...leerSocios().map((s) => perfilSocio({ id: s.id }))]
+export const listarPerfiles = () => leerSocios().map((s) => perfilSocio({ id: s.id }))

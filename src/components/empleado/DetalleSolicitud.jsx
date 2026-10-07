@@ -136,8 +136,13 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
             {solicitud.tipo === 'Comprobante de pago' && (
               <div className="bg-body-tertiary rounded-4 p-3 mb-3">
                 <div className="small fw-bold text-uppercase text-secondary mb-2">Comprobante enviado</div>
-                {!solicitud.comprobante && <p className="small text-body-secondary mb-0">Solicitud de ejemplo, sin archivo adjunto.</p>}
-                {solicitud.comprobante?.tipo.startsWith('image/') && (
+                {!solicitud.comprobante && <p className="small text-body-secondary mb-0">Pago informado sin archivo adjunto.</p>}
+                {solicitud.comprobante && !solicitud.comprobante.dataUrl && (
+                  <p className="small text-body-secondary mb-0">
+                    El archivo quedó guardado en el navegador desde donde se envió. Los datos del pago y la verificación de la IA están arriba.
+                  </p>
+                )}
+                {solicitud.comprobante?.dataUrl && solicitud.comprobante.tipo.startsWith('image/') && (
                   <button
                     type="button"
                     className="d-block w-100 p-0 border-0 bg-transparent mb-2"
@@ -152,7 +157,7 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
                     />
                   </button>
                 )}
-                {solicitud.comprobante?.tipo === 'application/pdf' && (
+                {solicitud.comprobante?.dataUrl && solicitud.comprobante.tipo === 'application/pdf' && (
                   <object
                     data={solicitud.comprobante.dataUrl}
                     type="application/pdf"
@@ -163,7 +168,7 @@ function DetalleSolicitud({ solicitud, mostrar, onCerrar, onResolver }) {
                     <p className="small mb-0">Tu navegador no muestra PDF acá: descargalo para verlo.</p>
                   </object>
                 )}
-                {solicitud.comprobante && (
+                {solicitud.comprobante?.dataUrl && (
                   <a href={solicitud.comprobante.dataUrl} download={solicitud.comprobante.nombre} className="d-inline-block small link-secondary">
                     Descargar {solicitud.comprobante.nombre}
                   </a>

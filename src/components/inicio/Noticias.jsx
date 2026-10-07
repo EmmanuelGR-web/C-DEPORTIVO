@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Modal, Badge, Button, Image } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import TarjetaNoticia from './TarjetaNoticia'
+import EstadoConsulta from '../common/EstadoConsulta'
 import { formatearFecha } from '../../utils/fechas'
 import { coloresCategoria } from '../../data/noticias'
 
-function Noticias({ noticias }) {
+function Noticias({ noticias, cargando, error, onReintentar }) {
  
   const [abierta, setAbierta] = useState(null)
   const [mostrar, setMostrar] = useState(false)
@@ -20,6 +21,7 @@ function Noticias({ noticias }) {
       <span className="text-uppercase fw-bold text-primary small">Actualidad</span>
       <h2 className="fw-bolder text-uppercase fst-italic mb-3">Noticias</h2>
 
+      <EstadoConsulta cargando={cargando} error={error} vacio={noticias.length === 0} onReintentar={onReintentar} textoVacio="Todavía no hay noticias publicadas." />
       <div className="d-flex flex-column gap-3">
         {noticias.map((noticia) => (
           <TarjetaNoticia key={noticia.id} noticia={noticia} onAbrir={abrir} />

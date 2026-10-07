@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Row, Col, Button, Modal } from 'react-bootstrap'
+import { Row, Col, Button, ButtonGroup, Modal, Table, Image } from 'react-bootstrap'
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaMapMarkerAlt, FaTicketAlt, FaTv } from 'react-icons/fa'
 import TarjetaEvento from './TarjetaEvento'
+import EstadoConsulta from '../common/EstadoConsulta'
+import { nombreLiga } from '../../services/deportesApi'
 import { formatearFechaLarga } from '../../utils/fechas'
 
 function DatoEvento({ icono: Icono, children }) {
@@ -13,12 +15,14 @@ function DatoEvento({ icono: Icono, children }) {
   )
 }
 
-function Calendario({ eventos }) {
+function Calendario({ eventos, tabla = [], cargando, error, onReintentar }) {
   const cinta = useRef(null)
   const [enInicio, setEnInicio] = useState(true)
   const [enFinal, setEnFinal] = useState(false)
   const [abierto, setAbierto] = useState(null)
   const [mostrar, setMostrar] = useState(false)
+  const [zona, setZona] = useState(null)
+  const zonaActual = tabla.find((z) => z.zona === zona) ?? tabla.find((z) => z.equipos.some((e) => e.esElEquipo)) ?? tabla[0]
 
   const actualizarFlechas = () => {
     const { scrollLeft, scrollWidth, clientWidth } = cinta.current
@@ -30,7 +34,7 @@ function Calendario({ eventos }) {
     actualizarFlechas()
     window.addEventListener('resize', actualizarFlechas)
     return () => window.removeEventListener('resize', actualizarFlechas)
-  }, [])
+  }, [eventos])
 
   const mover = (sentido) => {
     const anchoTarjeta = cinta.current.firstElementChild.offsetWidth
@@ -49,7 +53,7 @@ function Calendario({ eventos }) {
           <FaCalendarAlt aria-hidden="true" />
         </span>
         <div>
-          <span className="text-uppercase fw-bold text-primary small">Agenda</span>
+          <span className="text-uppercase fw-bold text-primary small">Fútbol profesional en Tucumán</span>
           <h2 className="fw-bolder text-uppercase fst-italic mb-0">Calendario</h2>
         </div>
         <div className="ms-auto d-flex gap-2">
@@ -61,6 +65,8 @@ function Calendario({ eventos }) {
           </Button>
         </div>
       </div>
+
+      <EstadoConsulta cargando={cargando} error={error} vacio={eventos.length === 0} onReintentar={onReintentar} textoVacio="No hay partidos cargados por ahora." />
 
       <Row
         ref={cinta}
@@ -74,6 +80,55 @@ function Calendario({ eventos }) {
           </Col>
         ))}
       </Row>
+
+      {tabla.length > 0 && (
+        <div className="mt-4">
+          <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <h3 className="h6 fw-bold text-uppercase text-secondary mb-0">Tabla de posiciones · {nombreLiga}</h3>
+            {tabla.length > 1 && (
+              <ButtonGroup size="sm" className="ms-sm-auto" aria-label="Elegir zona">
+                {tabla.map((z) => (
+                  <Button key={z.zona} variant={z.zona === zonaActual?.zona ? 'secondary' : 'outline-secondary'} onClick={() => setZona(z.zona)}>
+                    {z.zona}
+                  </Button>
+                ))}
+              </ButtonGroup>
+            )}
+          </div>
+          <Table responsive size="sm" hover className="align-middle small mb-1">
+            <thead>
+              <tr className="text-uppercase">
+                <th scope="col">#</th>
+                <th scope="col">Equipo</th>
+                <th scope="col" className="text-center">PJ</th>
+                <th scope="col" className="text-center d-none d-sm-table-cell">G</th>
+                <th scope="col" className="text-center d-none d-sm-table-cell">E</th>
+                <th scope="col" className="text-center d-none d-sm-table-cell">P</th>
+                <th scope="col" className="text-center">DG</th>
+                <th scope="col" className="text-center">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {zonaActual?.equipos.map((fila) => (
+                <tr key={fila.id} className={fila.esElEquipo ? 'table-warning fw-semibold' : ''}>
+                  <td className="fw-bold">{fila.puesto}</td>
+                  <td className="text-nowrap">
+                    <Image src={fila.escudo} alt="" width={20} height={20} className="object-fit-contain me-2" loading="lazy" />
+                    {fila.equipo}
+                  </td>
+                  <td className="text-center">{fila.jugados}</td>
+                  <td className="text-center d-none d-sm-table-cell">{fila.ganados}</td>
+                  <td className="text-center d-none d-sm-table-cell">{fila.empatados}</td>
+                  <td className="text-center d-none d-sm-table-cell">{fila.perdidos}</td>
+                  <td className="text-center">{fila.diferencia}</td>
+                  <td className="text-center fw-bold">{fila.puntos}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          <p className="small text-body-secondary mb-0">Datos en vivo de ESPN.</p>
+        </div>
+      )}
 
       <Modal show={mostrar} onHide={() => setMostrar(false)} centered>
         {abierto && (
