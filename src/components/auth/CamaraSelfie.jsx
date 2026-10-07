@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Modal, Button, Alert, Spinner } from 'react-bootstrap'
 import { FaCamera } from 'react-icons/fa'
 
-const tamanio = 480
+const tamanio = 320
+const calidad = 0.75
 
 function CamaraSelfie({ foto, onCapturar, invalido, variante = 'oscura', deshabilitado = false, textoVacio = 'Sacate una selfie' }) {
   const [abierta, setAbierta] = useState(false)
@@ -53,16 +54,24 @@ function CamaraSelfie({ foto, onCapturar, invalido, variante = 'oscura', deshabi
     ctx.translate(tamanio, 0)
     ctx.scale(-1, 1)
     ctx.drawImage(v, (v.videoWidth - lado) / 2, (v.videoHeight - lado) / 2, lado, lado, 0, 0, tamanio, tamanio)
-    onCapturar(lienzo.toDataURL('image/jpeg', 0.85))
+    onCapturar(lienzo.toDataURL('image/jpeg', calidad))
     cerrar()
   }
 
   const desdeArchivo = (e) => {
     const archivo = e.target.files[0]
     if (!archivo) return
-    const lector = new FileReader()
-    lector.onload = () => onCapturar(lector.result)
-    lector.readAsDataURL(archivo)
+    const imagen = new Image()
+    imagen.onload = () => {
+      const lado = Math.min(imagen.width, imagen.height)
+      const lienzo = document.createElement('canvas')
+      lienzo.width = tamanio
+      lienzo.height = tamanio
+      lienzo.getContext('2d').drawImage(imagen, (imagen.width - lado) / 2, (imagen.height - lado) / 2, lado, lado, 0, 0, tamanio, tamanio)
+      URL.revokeObjectURL(imagen.src)
+      onCapturar(lienzo.toDataURL('image/jpeg', calidad))
+    }
+    imagen.src = URL.createObjectURL(archivo)
     cerrar()
   }
 

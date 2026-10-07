@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSesion } from '../hooks/useSesion'
 import { accesoRestringido, guardarAvisoBloqueo } from '../utils/personal'
 import { useDatosEnVivo } from '../hooks/useDatosEnVivo'
+import PantallaCarga from '../components/common/PantallaCarga'
 import MensajesInternos from '../components/common/MensajesInternos'
 import { leerHilosInternos } from '../utils/mensajesInternos'
 import { useTituloPagina } from '../hooks/useTituloPagina'
@@ -49,10 +50,8 @@ const leerTodo = () => {
   }
 }
 
-function PanelEmpleado() {
-  useTituloPagina('Panel administrativo')
+function ContenidoEmpleado({ datos, recargar, actualizado }) {
   const [seccion, setSeccion] = useState('resumen')
-  const [datos, recargar, actualizado] = useDatosEnVivo(leerTodo)
   const [revisando, setRevisando] = useState(null)
   const [mostrarDetalle, setMostrarDetalle] = useState(false)
   const [fichaAbierta, setFichaAbierta] = useState(null)
@@ -120,6 +119,13 @@ function PanelEmpleado() {
       <DetalleSolicitud solicitud={revisando} mostrar={mostrarDetalle} onCerrar={() => setMostrarDetalle(false)} onResolver={resolver} />
     </PanelLayout>
   )
+}
+
+function PanelEmpleado() {
+  useTituloPagina('Panel administrativo')
+  const [datos, recargar, actualizado, error] = useDatosEnVivo(leerTodo)
+  if (!datos) return <PantallaCarga error={error} onReintentar={recargar} />
+  return <ContenidoEmpleado datos={datos} recargar={recargar} actualizado={actualizado} />
 }
 
 export default PanelEmpleado

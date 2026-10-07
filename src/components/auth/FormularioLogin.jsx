@@ -20,6 +20,7 @@ function FormularioLogin() {
   const [verContrasena, setVerContrasena] = useState(false)
   const [validado, setValidado] = useState(false)
   const [error, setError] = useState(false)
+  const [errorConexion, setErrorConexion] = useState('')
   const [recuperar, setRecuperar] = useState(false)
   const [bloqueo, setBloqueo] = useState(leerAvisoBloqueo)
   const [despedida, setDespedida] = useState(tomarAvisoSalida)
@@ -32,6 +33,7 @@ function FormularioLogin() {
   const enviar = async (e) => {
     e.preventDefault()
     setError(false)
+    setErrorConexion('')
     setBloqueo(null)
     setDespedida(null)
     setValidado(true)
@@ -40,6 +42,10 @@ function FormularioLogin() {
     const usuario = await iniciarSesion(email, contrasena, recordar)
     if (!usuario) {
       setError(true)
+      return
+    }
+    if (usuario.errorConexion) {
+      setErrorConexion(usuario.errorConexion)
       return
     }
     if (usuario.bloqueado) {
@@ -66,6 +72,11 @@ function FormularioLogin() {
         {bloqueo && (
           <Alert variant="warning" className="py-2 small">
             <strong>Tu acceso al portal está pausado.</strong> {textoAusencia(bloqueo)}. {textoRegreso(bloqueo).replace('Vuelve', 'Vas a poder ingresar')}.
+          </Alert>
+        )}
+        {errorConexion && (
+          <Alert variant="warning" className="py-2 small">
+            No pudimos verificar tu cuenta: {errorConexion}
           </Alert>
         )}
         {error && (

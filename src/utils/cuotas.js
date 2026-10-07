@@ -1,4 +1,4 @@
-import { informesEjemplo } from '../data/sociosEjemplo'
+import { actualizarSocio, leerSocios } from './socios'
 
 export const diaVencimiento = 15
 export const interesDiario = 0.001
@@ -24,21 +24,36 @@ export const calcularCuota = (base, anio, mes, fechaPago = new Date(), vence = v
   return { base, dias, recargo, total: base + recargo }
 }
 
-const clave = (socioId) => `pagosInformados:${socioId}`
+const claveArchivo = (socioId, periodo) => `comprobante:${socioId}:${periodo}`
 
-export const leerInformes = (socioId) => {
+const leerArchivo = (socioId, periodo) => {
   try {
-    return { ...informesEjemplo[socioId], ...JSON.parse(localStorage.getItem(clave(socioId))) }
+    return localStorage.getItem(claveArchivo(socioId, periodo))
   } catch {
-    return informesEjemplo[socioId] ?? {}
+    return null
   }
 }
 
-export const guardarInforme = (socioId, periodo, informe) => {
+const guardarArchivo = (socioId, periodo, dataUrl) => {
   try {
-    localStorage.setItem(clave(socioId), JSON.stringify({ ...leerInformes(socioId), [periodo]: informe }))
-    return true
+    localStorage.setItem(claveArchivo(socioId, periodo), dataUrl)
   } catch {
-    return false
+    return
   }
+}
+
+const conArchivo = (socioId, periodo, informe) =>
+  informe.comprobante ? { ...informe, comprobante: { ...informe.comprobante, dataUrl: leerArchivo(socioId, periodo) } } : informe
+
+export const leerInformes = (socioId) => {
+  const informes = leerSocios().find((s) => s.id === socioId)?.informes ?? {}
+  return Object.fromEntries(Object.entries(informes).map(([periodo, informe]) => [periodo, conArchivo(socioId, periodo, informe)]))
+}
+
+export const guardarInforme = (socioId, periodo, informe) => {
+  const { comprobante } = informe
+  if (comprobante?.dataUrl) guardarArchivo(socioId, periodo, comprobante.dataUrl)
+  const datos = comprobante ? { ...informe, comprobante: { nombre: comprobante.nombre, tipo: comprobante.tipo, tamanio: comprobante.tamanio } } : informe
+  const actuales = leerSocios().find((s) => s.id === socioId)?.informes ?? {}
+  return actualizarSocio(socioId, { informes: { ...actuales, [periodo]: datos } })
 }

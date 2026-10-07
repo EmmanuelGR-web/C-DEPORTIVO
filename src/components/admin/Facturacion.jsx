@@ -93,7 +93,7 @@ function Facturacion({ perfiles, autor, onAbrirFicha }) {
                 </td>
                 <td>
                   <EstadoBadge estado={pago.estado} />
-                  {pago.comprobante && (
+                  {pago.comprobante?.dataUrl && (
                     <a href={pago.comprobante.dataUrl} download={pago.comprobante.nombre} className="d-block small link-secondary mt-1">
                       Ver comprobante
                     </a>

@@ -1,4 +1,3 @@
-import { solicitudesDemo } from '../data/gestion'
 import { leerSocios, actualizarSocio } from './socios'
 import { leerAuditoria, marcarResuelto, registrarCambios } from './auditoria'
 import { aplicarIdentidad, correoAdministracion, listarPerfiles, perfilSocio, revertirCambios } from './perfilSocio'
@@ -20,7 +19,7 @@ export const listarSolicitudes = () => {
   const estados = leerEstados()
 
   const altas = leerSocios()
-    .filter((s) => !(s.ejemplo && s.estado === 'Activo'))
+    .filter((s) => !s.cargaInicial || s.estado !== 'Activo')
     .map((s) => ({
       id: `alta-${s.id}`,
       tipo: 'Alta de socio',
@@ -88,7 +87,7 @@ export const listarSolicitudes = () => {
     }),
   )
 
-  return [...altas, ...cambios, ...comprobantes, ...solicitudesDemo]
+  return [...altas, ...cambios, ...comprobantes]
     .map((s) => ({ ...s, estado: estados[s.id]?.estado ?? s.estadoInicial ?? 'Pendiente', revision: estados[s.id] ?? null }))
     .sort((a, b) => b.fecha.localeCompare(a.fecha))
 }
@@ -105,6 +104,7 @@ const detalleIdentidad = (registro) => {
 const avisarAlSocio = (solicitud, estado, motivo, revertidos = []) => {
   if (!solicitud.socioId) return
   const socio = perfilSocio({ id: solicitud.socioId })
+  if (!socio) return
   const texto =
     estado === 'Autorizado'
       ? `Tu solicitud "${solicitud.tipo}" fue autorizada.${solicitud.tipo === 'Alta de socio' ? ' Tu carnet digital ya está activo. ¡Bienvenido/a al club!' : ''}${solicitud.pendiente ? ' Tus datos ya se actualizaron en tu perfil y en tu carnet.' : ''}`

@@ -5,7 +5,7 @@ import CamaraSelfie from '../auth/CamaraSelfie'
 import OpcionPago from '../auth/OpcionPago'
 import DatosTarjeta from '../auth/DatosTarjeta'
 import { listaCampos } from '../../utils/validaciones'
-import { buscarDuplicado, guardarSocio, actualizarSocio, normalizarDni } from '../../utils/socios'
+import { buscarDuplicado, cargarSocios, guardarSocio, normalizarDni } from '../../utils/socios'
 import { registrarCambios } from '../../utils/auditoria'
 import { erroresTarjeta, resumirTarjeta, revisarNumeroTarjeta, tarjetaVacia } from '../../utils/tarjetas'
 
@@ -36,13 +36,20 @@ function NuevoSocio({ empleado, onCreado }) {
     e.preventDefault()
     setValidado(true)
     if (campos.some((c) => !c.valido(valores[c.nombre])) || Object.values(erroresPago).some(Boolean)) return
+    setGuardando(true)
+    try {
+      await cargarSocios()
+    } catch {
+      setGuardando(false)
+      return
+    }
     const repetido = buscarDuplicado(valores)
     if (repetido) {
+      setGuardando(false)
       setDuplicado(repetido)
       return
     }
 
-    setGuardando(true)
     const contrasena = contrasenaInicial(valores.dni)
     const socio = await guardarSocio({
       ...valores,
@@ -50,12 +57,13 @@ function NuevoSocio({ empleado, onCreado }) {
       foto,
       fotoActualizada: foto ? new Date().toISOString() : null,
       debeCambiarContrasena: true,
+      estado: 'Activo',
+      altaPresencial: true,
       medioPago: pago === 'tarjeta' ? resumirTarjeta(tarjeta) : { tipo: 'efectivo', debitoAutomatico: false },
     })
     setGuardando(false)
     if (!socio) return
 
-    actualizarSocio(socio.id, { estado: 'Activo', altaPresencial: true })
     registrarCambios({
       socioId: socio.id,
       socioNombre: socio.nombre,

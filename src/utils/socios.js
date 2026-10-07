@@ -1,18 +1,19 @@
-import { usuariosDemo } from '../data/usuarios'
-import { sociosEjemplo } from '../data/sociosEjemplo'
+import { borrarSocio, buscarSocioPorEmail, crearSocio, listarSocios, modificarSocio } from '../services/sociosApi'
 
-const clave = 'sociosRegistrados'
+let padron = []
+let escriturasPendientes = 0
+
+export const avisarErrorApi = (mensaje) => window.dispatchEvent(new CustomEvent('club:error-api', { detail: mensaje }))
 
 export const normalizarEmail = (email) => email.trim().toLowerCase()
 export const normalizarDni = (dni) => dni.replace(/\D/g, '')
 
-export const leerSocios = () => {
-  try {
-    const guardados = JSON.parse(localStorage.getItem(clave)) ?? []
-    return [...sociosEjemplo.filter((e) => !guardados.some((s) => s.id === e.id)), ...guardados]
-  } catch {
-    return sociosEjemplo
-  }
+export const leerSocios = () => padron
+
+export const cargarSocios = async () => {
+  if (escriturasPendientes > 0) return padron
+  padron = await listarSocios()
+  return padron
 }
 
 export const cifrarContrasena = async (contrasena) => {
@@ -22,33 +23,50 @@ export const cifrarContrasena = async (contrasena) => {
 }
 
 export const buscarDuplicado = ({ email, dni }, excluirId) => {
-  const socios = leerSocios().filter((s) => s.id !== excluirId)
+  const socios = padron.filter((s) => s.id !== excluirId)
   if (socios.some((s) => s.email === normalizarEmail(email))) return 'email'
   if (socios.some((s) => s.dni === normalizarDni(dni))) return 'dni'
   return null
 }
 
 export const guardarSocio = async ({ contrasena, ...datos }) => {
-  const socio = {
+  const nuevo = {
     ...datos,
-    id: crypto.randomUUID(),
     email: normalizarEmail(datos.email),
     dni: normalizarDni(datos.dni),
     contrasenaCifrada: await cifrarContrasena(contrasena),
     fechaAlta: new Date().toISOString(),
   }
   try {
-    localStorage.setItem(clave, JSON.stringify([...leerSocios(), socio]))
+    const socio = await crearSocio(nuevo)
+    padron = [...padron, socio]
     return socio
-  } catch {
+  } catch (problema) {
+    avisarErrorApi(problema.message)
     return null
   }
 }
 
 export const validarSocio = async (email, contrasena) => {
-  const socio = leerSocios().find((s) => s.email === normalizarEmail(email))
+  const socio = await buscarSocioPorEmail(normalizarEmail(email))
   if (!socio) return null
   return socio.contrasenaCifrada === (await cifrarContrasena(contrasena)) ? socio : null
+}
+
+export const actualizarSocio = (id, cambios) => {
+  padron = padron.map((s) => (s.id === id ? { ...s, ...cambios } : s))
+  escriturasPendientes += 1
+  modificarSocio(id, cambios)
+    .catch((problema) => avisarErrorApi(`No se pudo guardar el cambio en el servidor. ${problema.message}`))
+    .finally(() => {
+      escriturasPendientes -= 1
+    })
+  return true
+}
+
+export const eliminarSocio = async (id) => {
+  await borrarSocio(id)
+  padron = padron.filter((s) => s.id !== id)
 }
 
 const claveDemo = 'contrasenasDemo'
@@ -66,38 +84,12 @@ export const validarContrasenaDemo = async (usuario, contrasena) => {
   return guardada ? guardada === (await cifrarContrasena(contrasena)) : usuario.contrasena === contrasena
 }
 
-const usuarioSocioDemo = () => usuariosDemo.find((u) => u.rol === 'socio')
-
-const guardarContrasena = async (perfil, nueva, extra = {}) => {
-  const contrasenaCifrada = await cifrarContrasena(nueva)
-  if (perfil.esRegistrado) return actualizarSocio(perfil.id, { contrasenaCifrada, ...extra })
-  try {
-    localStorage.setItem(claveDemo, JSON.stringify({ ...leerContrasenasDemo(), [usuarioSocioDemo().email]: contrasenaCifrada }))
-    const guardados = JSON.parse(localStorage.getItem('socioDemoEditado')) ?? {}
-    localStorage.setItem('socioDemoEditado', JSON.stringify({ ...guardados, ...extra }))
-    return true
-  } catch {
-    return false
-  }
-}
+const guardarContrasena = async (perfil, nueva, extra = {}) => actualizarSocio(perfil.id, { contrasenaCifrada: await cifrarContrasena(nueva), ...extra })
 
 export const restablecerContrasena = (perfil) => guardarContrasena(perfil, normalizarDni(perfil.dni), { debeCambiarContrasena: true })
 
 export const cambiarContrasena = async (perfil, actual, nueva) => {
-  const correcta = perfil.esRegistrado
-    ? leerSocios().find((s) => s.id === perfil.id)?.contrasenaCifrada === (await cifrarContrasena(actual))
-    : await validarContrasenaDemo(usuarioSocioDemo(), actual)
+  const correcta = padron.find((s) => s.id === perfil.id)?.contrasenaCifrada === (await cifrarContrasena(actual))
   if (!correcta) return 'actual'
   return (await guardarContrasena(perfil, nueva, { debeCambiarContrasena: false })) ? 'ok' : 'error'
-}
-
-export const actualizarSocio = (id, cambios) => {
-  const socios = leerSocios()
-  const nuevos = socios.map((s) => (s.id === id ? { ...s, ...cambios } : s))
-  try {
-    localStorage.setItem(clave, JSON.stringify(nuevos))
-    return true
-  } catch {
-    return false
-  }
 }

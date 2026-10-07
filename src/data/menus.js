@@ -1,4 +1,4 @@
-import { FaThLarge, FaUser, FaFileInvoiceDollar, FaInbox, FaClipboardCheck, FaUsers, FaHistory, FaUserPlus, FaIdBadge, FaComments, FaUserTie, FaChartBar, FaUserClock } from 'react-icons/fa'
+import { FaThLarge, FaUser, FaFileInvoiceDollar, FaInbox, FaClipboardCheck, FaUsers, FaHistory, FaUserPlus, FaIdBadge, FaComments, FaUserTie, FaChartBar, FaUserClock, FaNewspaper } from 'react-icons/fa'
 
 export const enlacesInicio = [
   { etiqueta: 'Inicio', href: '#inicio' },
@@ -33,6 +33,7 @@ export const menuAdmin = [
   { id: 'presencia', etiqueta: 'Control del personal', icono: FaUserClock },
   { id: 'socios', etiqueta: 'Socios', icono: FaUsers },
   { id: 'facturacion', etiqueta: 'Facturación', icono: FaFileInvoiceDollar },
+  { id: 'noticias', etiqueta: 'Noticias', icono: FaNewspaper },
   { id: 'reportes', etiqueta: 'Reportes', icono: FaChartBar },
   { id: 'interno', etiqueta: 'Mensajes del personal', icono: FaComments },
 ]
