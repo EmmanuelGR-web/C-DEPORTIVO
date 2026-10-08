@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Modal, Form, Button, Alert } from 'react-bootstrap'
+import { Modal, Form, Button } from 'react-bootstrap'
+import { alertaMensaje } from '../../utils/alertas'
 
 function RecuperarContrasena({ mostrar, onCerrar }) {
   const [email, setEmail] = useState('')
   const [validado, setValidado] = useState(false)
-  const [enviado, setEnviado] = useState(false)
 
   const enviar = (e) => {
     e.preventDefault()
@@ -12,13 +12,16 @@ function RecuperarContrasena({ mostrar, onCerrar }) {
       setValidado(true)
       return
     }
-    setEnviado(true)
+    onCerrar()
+    alertaMensaje({
+      titulo: 'Revisá tu correo',
+      texto: `Si ${email} está registrado, vas a recibir un correo con los pasos para crear una contraseña nueva.`,
+    })
   }
 
   const reiniciar = () => {
     setEmail('')
     setValidado(false)
-    setEnviado(false)
   }
 
   return (
@@ -27,23 +30,17 @@ function RecuperarContrasena({ mostrar, onCerrar }) {
         <Modal.Title className="h5 fw-bold">Recuperar contraseña</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {enviado ? (
-          <Alert variant="success" className="mb-0">
-            Si <strong>{email}</strong> está registrado, vas a recibir un correo con los pasos para crear una contraseña nueva.
-          </Alert>
-        ) : (
-          <Form noValidate validated={validado} onSubmit={enviar}>
-            <p className="text-body-secondary">Escribí el correo con el que te registraste y te enviamos un enlace para cambiarla.</p>
-            <Form.Group className="mb-3" controlId="recuperar-email">
-              <Form.Label>Correo electrónico</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
-              <Form.Control.Feedback type="invalid">Ingresá un correo electrónico válido.</Form.Control.Feedback>
-            </Form.Group>
-            <Button type="submit" variant="primary" className="rounded-pill px-4">
-              Enviar enlace
-            </Button>
-          </Form>
-        )}
+        <Form noValidate validated={validado} onSubmit={enviar}>
+          <p className="text-body-secondary">Escribí el correo con el que te registraste y te enviamos un enlace para cambiarla.</p>
+          <Form.Group className="mb-3" controlId="recuperar-email">
+            <Form.Label>Correo electrónico</Form.Label>
+            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+            <Form.Control.Feedback type="invalid">Ingresá un correo electrónico válido.</Form.Control.Feedback>
+          </Form.Group>
+          <Button type="submit" variant="primary" className="rounded-pill px-4">
+            Enviar enlace
+          </Button>
+        </Form>
       </Modal.Body>
     </Modal>
   )

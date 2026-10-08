@@ -7,6 +7,7 @@ import MedioPago from '../socio/MedioPago'
 import PagosFiltrables from '../socio/PagosFiltrables'
 import { perfilSocio, guardarCambiosSocio } from '../../utils/perfilSocio'
 import { eliminarSocio, restablecerContrasena, normalizarDni } from '../../utils/socios'
+import { alertaExito, confirmarBorrado } from '../../utils/alertas'
 import { registrarCambios } from '../../utils/auditoria'
 import { categorias } from '../../utils/categorias'
 import { formatearPesos } from '../../utils/carnet'
@@ -15,7 +16,6 @@ function FichaSocio({ socioId, empleado, onVolver, onCambio, puedeDarDeBaja = fa
   const [perfil, setPerfil] = useState(() => perfilSocio({ id: socioId }))
   const [confirmar, setConfirmar] = useState(false)
   const [aviso, setAviso] = useState('')
-  const [baja, setBaja] = useState({ abierta: false, enviando: false, error: '' })
   const autor = `${empleado.nombre} (${empleado.codigo})`
 
   const recargar = () => {
@@ -48,21 +48,23 @@ function FichaSocio({ socioId, empleado, onVolver, onCambio, puedeDarDeBaja = fa
   }
 
   const darDeBaja = async () => {
-    setBaja({ abierta: true, enviando: true, error: '' })
-    try {
-      await eliminarSocio(perfil.id)
-      registrarCambios({
-        socioId: perfil.id,
-        socioNombre: perfil.nombre,
-        seccion: 'Baja de socio',
-        autor,
-        cambios: [{ campo: 'Estado', anterior: perfil.estado, nuevo: 'Dado de baja' }],
-      })
-      onCambio()
-      onVolver()
-    } catch (problema) {
-      setBaja({ abierta: true, enviando: false, error: problema.message })
-    }
+    const confirmada = await confirmarBorrado({
+      titulo: `¿Dar de baja a ${perfil.nombre}?`,
+      texto: `Se borra del padrón del club (N° ${perfil.numeroSocio}). No se puede deshacer.`,
+      boton: 'Sí, dar de baja',
+      accion: () => eliminarSocio(perfil.id),
+    })
+    if (!confirmada) return
+    registrarCambios({
+      socioId: perfil.id,
+      socioNombre: perfil.nombre,
+      seccion: 'Baja de socio',
+      autor,
+      cambios: [{ campo: 'Estado', anterior: perfil.estado, nuevo: 'Dado de baja' }],
+    })
+    alertaExito(`${perfil.nombre} ya no figura en el padrón.`, 'Baja registrada')
+    onCambio()
+    onVolver()
   }
 
   if (!perfil) {
@@ -137,29 +139,11 @@ function FichaSocio({ socioId, empleado, onVolver, onCambio, puedeDarDeBaja = fa
       {puedeDarDeBaja && (
         <Tarjeta titulo="Baja del socio" className="mb-4">
           <p className="small text-body-secondary">Borra al socio del padrón del club. Sus movimientos dejan de figurar en la facturación. No se puede deshacer.</p>
-          <Button variant="outline-danger" className="rounded-pill px-4" onClick={() => setBaja({ abierta: true, enviando: false, error: '' })}>
+          <Button variant="outline-danger" className="rounded-pill px-4" onClick={darDeBaja}>
             Dar de baja
           </Button>
         </Tarjeta>
       )}
-
-      <Modal show={baja.abierta} onHide={() => setBaja({ abierta: false, enviando: false, error: '' })} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="h5 fw-bold text-secondary">Dar de baja a {perfil.nombre}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {baja.error && <Alert variant="danger">{baja.error}</Alert>}
-          Se borra del padrón del club (N° {perfil.numeroSocio}). ¿Confirmás la baja?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" className="rounded-pill px-4" onClick={() => setBaja({ abierta: false, enviando: false, error: '' })}>
-            Cancelar
-          </Button>
-          <Button variant="danger" className="rounded-pill px-4" onClick={darDeBaja} disabled={baja.enviando}>
-            {baja.enviando ? 'Dando de baja…' : 'Dar de baja'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
 
       <div className="mb-4">
         <DatosPersonales socio={perfil} onGuardar={guardar} textoEditar="Corregir datos" textoGuardado="Datos del socio corregidos. El cambio quedó registrado con tu nombre." vistaPersonal />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Form, FloatingLabel, Button, Alert } from 'react-bootstrap'
+import { Form, FloatingLabel, Button } from 'react-bootstrap'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { useSesion } from '../../hooks/useSesion'
@@ -8,6 +8,10 @@ import RecuperarContrasena from './RecuperarContrasena'
 import UsuariosPrueba from './UsuariosPrueba'
 import { borrarAvisoBloqueo, leerAvisoBloqueo, textoAusencia, textoRegreso } from '../../utils/personal'
 import { tomarAvisoSalida } from '../../utils/jornada'
+import { alertaAviso, alertaBienvenida, alertaError, alertaExito } from '../../utils/alertas'
+
+const avisarBloqueo = (bloqueo) =>
+  alertaAviso(`${textoAusencia(bloqueo)}. ${textoRegreso(bloqueo).replace('Vuelve', 'Vas a poder ingresar')}.`, 'Tu acceso está pausado')
 
 function FormularioLogin() {
   const { iniciarSesion } = useSesion()
@@ -19,72 +23,48 @@ function FormularioLogin() {
   const [recordar, setRecordar] = useState(false)
   const [verContrasena, setVerContrasena] = useState(false)
   const [validado, setValidado] = useState(false)
-  const [error, setError] = useState(false)
-  const [errorConexion, setErrorConexion] = useState('')
   const [recuperar, setRecuperar] = useState(false)
-  const [bloqueo, setBloqueo] = useState(leerAvisoBloqueo)
-  const [despedida, setDespedida] = useState(tomarAvisoSalida)
+  const [avisoInicial] = useState(() => ({ bloqueo: leerAvisoBloqueo(), despedida: tomarAvisoSalida() }))
 
-  useEffect(() => borrarAvisoBloqueo(), [])
+  useEffect(() => {
+    if (avisoInicial.despedida) alertaExito(avisoInicial.despedida, 'Jornada terminada')
+    else if (avisoInicial.bloqueo) avisarBloqueo(avisoInicial.bloqueo)
+    borrarAvisoBloqueo()
+  }, [avisoInicial])
 
   const emailInvalido = validado && !/^\S+@\S+\.\S+$/.test(email)
   const contrasenaInvalida = validado && contrasena.length < 6
 
   const enviar = async (e) => {
     e.preventDefault()
-    setError(false)
-    setErrorConexion('')
-    setBloqueo(null)
-    setDespedida(null)
     setValidado(true)
     if (!/^\S+@\S+\.\S+$/.test(email) || contrasena.length < 6) return
 
     const usuario = await iniciarSesion(email, contrasena, recordar)
     if (!usuario) {
-      setError(true)
+      alertaError('Revisá el correo y la contraseña e intentá de nuevo.', 'Datos incorrectos')
       return
     }
     if (usuario.errorConexion) {
-      setErrorConexion(usuario.errorConexion)
+      alertaError(usuario.errorConexion, 'No pudimos verificar tu cuenta')
       return
     }
     if (usuario.bloqueado) {
-      setBloqueo(usuario.bloqueado)
+      avisarBloqueo(usuario.bloqueado)
       return
     }
+    alertaBienvenida(`¡Hola, ${usuario.nombre.split(' ')[0]}!`)
     navegar(ubicacion.state?.desde ?? usuario.ruta, { replace: true })
   }
 
   const usarUsuario = (usuario) => {
     setEmail(usuario.email)
     setContrasena(usuario.contrasena)
-    setError(false)
   }
 
   return (
     <>
       <Form noValidate onSubmit={enviar}>
-        {despedida && (
-          <Alert variant="success" className="py-2 small" dismissible onClose={() => setDespedida(null)}>
-            {despedida}
-          </Alert>
-        )}
-        {bloqueo && (
-          <Alert variant="warning" className="py-2 small">
-            <strong>Tu acceso al portal está pausado.</strong> {textoAusencia(bloqueo)}. {textoRegreso(bloqueo).replace('Vuelve', 'Vas a poder ingresar')}.
-          </Alert>
-        )}
-        {errorConexion && (
-          <Alert variant="warning" className="py-2 small">
-            No pudimos verificar tu cuenta: {errorConexion}
-          </Alert>
-        )}
-        {error && (
-          <Alert variant="danger" className="py-2">
-            El correo o la contraseña no son correctos.
-          </Alert>
-        )}
-
         <FloatingLabel controlId="login-email" label="Correo electrónico" className="text-body mb-3">
           <Form.Control
             type="email"

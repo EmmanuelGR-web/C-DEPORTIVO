@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Row, Col, Form, Button, Table, Modal, Alert, Badge, FloatingLabel, Image } from 'react-bootstrap'
+import { Row, Col, Form, Button, Table, Modal, Badge, FloatingLabel, Image } from 'react-bootstrap'
 import Tarjeta from '../common/Tarjeta'
 import EstadoConsulta from '../common/EstadoConsulta'
 import { useConsulta } from '../../hooks/useConsulta'
@@ -7,6 +7,7 @@ import { borrarNoticia, crearNoticia, listarNoticias, modificarNoticia } from '.
 import { categoriasNoticia, coloresCategoria } from '../../data/noticias'
 import { formatearFecha } from '../../utils/fechas'
 import { comprimirParaApi, pesoAproximado } from '../../utils/imagenes'
+import { alertaError, alertaExito, confirmarBorrado } from '../../utils/alertas'
 
 const vacia = () => ({ titulo: '', categoria: categoriasNoticia[0], fecha: new Date().toLocaleDateString('en-CA'), resumen: '', cuerpo: '', imagen: '' })
 
@@ -29,10 +30,7 @@ function GestionNoticias() {
   const [editando, setEditando] = useState(null)
   const [formulario, setFormulario] = useState(vacia)
   const [validado, setValidado] = useState(false)
-  const [borrando, setBorrando] = useState(null)
   const [enviando, setEnviando] = useState(false)
-  const [falla, setFalla] = useState('')
-  const [aviso, setAviso] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [errorImagen, setErrorImagen] = useState('')
 
@@ -57,7 +55,6 @@ function GestionNoticias() {
     setEditando(noticia ?? {})
     setFormulario(noticia ? aFormulario(noticia) : vacia())
     setValidado(false)
-    setFalla('')
     setErrorImagen('')
   }
 
@@ -74,33 +71,28 @@ function GestionNoticias() {
     setValidado(true)
     if (Object.values(invalidos).some(Boolean)) return
     setEnviando(true)
-    setFalla('')
     try {
       if (editando.id) await modificarNoticia(editando.id, aNoticia(formulario))
       else await crearNoticia(aNoticia(formulario))
-      setAviso(editando.id ? 'Se guardaron los cambios de la noticia.' : 'La noticia ya está publicada en Inicio.')
       setEditando(null)
+      alertaExito(editando.id ? 'Se guardaron los cambios de la noticia.' : 'La noticia ya está publicada en Inicio.')
       await recargar()
     } catch (problema) {
-      setFalla(problema.message)
+      alertaError(problema.message, 'No se pudo guardar la noticia')
     } finally {
       setEnviando(false)
     }
   }
 
-  const borrar = async () => {
-    setEnviando(true)
-    setFalla('')
-    try {
-      await borrarNoticia(borrando.id)
-      setAviso(`Se borró "${borrando.titulo}".`)
-      setBorrando(null)
-      await recargar()
-    } catch (problema) {
-      setFalla(problema.message)
-    } finally {
-      setEnviando(false)
-    }
+  const borrar = async (noticia) => {
+    const borrada = await confirmarBorrado({
+      titulo: '¿Borrar la noticia?',
+      texto: `"${noticia.titulo}" deja de verse en Inicio.`,
+      accion: () => borrarNoticia(noticia.id),
+    })
+    if (!borrada) return
+    alertaExito(`Se borró "${noticia.titulo}".`)
+    await recargar()
   }
 
   const campo = (id, etiqueta, mensaje, props = {}) => (
@@ -113,11 +105,6 @@ function GestionNoticias() {
   return (
     <Tarjeta titulo="Noticias de Inicio">
       <p className="small text-body-secondary">Las noticias se guardan en la API del club y se muestran en la columna derecha de la página de Inicio.</p>
-      {aviso && (
-        <Alert variant="success" dismissible onClose={() => setAviso('')}>
-          {aviso}
-        </Alert>
-      )}
 
       <EstadoConsulta cargando={cargando} error={error} vacio={noticias?.length === 0} onReintentar={recargar} textoVacio="Todavía no hay noticias." />
 
@@ -150,7 +137,7 @@ function GestionNoticias() {
                   <Button size="sm" variant="outline-secondary" className="rounded-pill px-3 me-1" onClick={() => abrir(n)}>
                     Editar
                   </Button>
-                  <Button size="sm" variant="link" className="link-danger" onClick={() => setBorrando(n)}>
+                  <Button size="sm" variant="link" className="link-danger" onClick={() => borrar(n)}>
                     Borrar
                   </Button>
                 </td>
@@ -164,13 +151,12 @@ function GestionNoticias() {
         Nueva noticia
       </Button>
 
-      <Modal show={Boolean(editando)} onHide={() => setEditando(null)} centered size="lg">
+      <Modal show={Boolean(editando)} onHide={() => setEditando(null)} centered size="lg" enforceFocus={false}>
         <Form noValidate onSubmit={guardar}>
           <Modal.Header closeButton>
             <Modal.Title className="h5 fw-bold text-secondary">{editando?.id ? 'Editar noticia' : 'Nueva noticia'}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            {falla && <Alert variant="danger">{falla}</Alert>}
             <Row className="g-3">
               <Col md={8}>{campo('titulo', 'Título', 'El título tiene al menos 5 caracteres.', { autoFocus: true, maxLength: 90 })}</Col>
               <Col md={4}>{campo('fecha', 'Fecha', 'Indicá la fecha.', { type: 'date' })}</Col>
@@ -237,24 +223,6 @@ function GestionNoticias() {
             </Button>
           </Modal.Footer>
         </Form>
-      </Modal>
-
-      <Modal show={Boolean(borrando)} onHide={() => setBorrando(null)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="h5 fw-bold text-secondary">Borrar noticia</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {falla && <Alert variant="danger">{falla}</Alert>}
-          ¿Borrar <strong>{borrando?.titulo}</strong>? Deja de verse en Inicio.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" className="rounded-pill px-4" onClick={() => setBorrando(null)}>
-            Cancelar
-          </Button>
-          <Button variant="danger" className="rounded-pill px-4" onClick={borrar} disabled={enviando}>
-            {enviando ? 'Borrando…' : 'Borrar'}
-          </Button>
-        </Modal.Footer>
       </Modal>
     </Tarjeta>
   )
