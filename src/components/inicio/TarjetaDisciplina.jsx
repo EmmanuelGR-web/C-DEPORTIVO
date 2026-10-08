@@ -9,7 +9,7 @@ function TarjetaDisciplina({ disciplina }) {
 
   return (
     <article className="h-100 d-flex flex-column bg-white border rounded-4 shadow overflow-hidden">
-      <div className="position-relative bg-dark flex-shrink-0" style={{ height: '45%' }}>
+      <div className="bg-dark flex-shrink-0" style={{ height: '45%' }}>
         {sinFoto ? (
           <div className="h-100 d-flex align-items-center justify-content-center text-warning display-1">
             <Icono aria-hidden="true" />
@@ -24,9 +24,6 @@ function TarjetaDisciplina({ disciplina }) {
             className="w-100 h-100 object-fit-cover"
           />
         )}
-        <span className="position-absolute bottom-0 start-0 m-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark p-2 fs-5 shadow">
-          <Icono aria-hidden="true" />
-        </span>
       </div>
 
       <div className="flex-grow-1 d-flex flex-column p-3">
