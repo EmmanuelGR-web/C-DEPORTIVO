@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Form, Row, Col, Button, Alert, Collapse, Spinner, Badge } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaIdCard, FaCreditCard, FaMoneyBillWave, FaCheckCircle, FaUserPlus, FaRobot, FaMagic } from 'react-icons/fa'
 import SubirImagen from './SubirImagen'
 import CamaraSelfie from './CamaraSelfie'
@@ -14,6 +14,7 @@ import { leerAdjunto } from '../../utils/mensajes'
 import { formatearFechaConAnio } from '../../utils/fechas'
 import { buscarDuplicado, cargarSocios, guardarSocio } from '../../utils/socios'
 import { tarjetaVidrio } from './estilosAuth'
+import { alertaAviso, alertaError, alertaMensaje } from '../../utils/alertas'
 
 const edadValida = (fecha) => {
   const nacimiento = new Date(`${fecha}T12:00:00`)
@@ -93,7 +94,10 @@ function CampoTexto({ campo, valor, onCambiar, invalido, leido, mensaje }) {
   )
 }
 
+const textoDuplicado = (campo) => `Ya hay un socio registrado con ese ${campo === 'email' ? 'correo' : 'DNI'}. Si es tuyo, ingresá con tu cuenta.`
+
 function FormularioRegistro() {
+  const navegar = useNavigate()
   const [datos, setDatos] = useState(vacio)
   const [imagenes, setImagenes] = useState({ frente: null, dorso: null })
   const [selfie, setSelfie] = useState(null)
@@ -107,7 +111,6 @@ function FormularioRegistro() {
   const [validado, setValidado] = useState(false)
   const [registrado, setRegistrado] = useState(null)
   const [duplicado, setDuplicado] = useState(null)
-  const [errorGuardado, setErrorGuardado] = useState(false)
 
   const cambiar = (campo, valor) => {
     setDatos((actual) => ({ ...actual, [campo]: valor }))
@@ -121,6 +124,7 @@ function FormularioRegistro() {
       const resultado = await leerConIA('dni', [{ dataUrl: frente }, { dataUrl: dorso }])
       if (!resultado.esDni) {
         setAvisoLectura('Las fotos no parecen de un DNI argentino. Probá con otras o completá tus datos a mano.')
+        alertaAviso('Las fotos no parecen de un DNI argentino. Probá con otras o completá tus datos a mano.', 'No pudimos leer tu DNI')
         setLectura('error')
         return
       }
@@ -139,6 +143,7 @@ function FormularioRegistro() {
       setLectura('lista')
     } catch (problema) {
       setAvisoLectura(`${problema.message} Completá tus datos a mano.`)
+      alertaAviso(`${problema.message} Completá tus datos a mano.`, 'No pudimos leer tu DNI')
       setLectura('error')
     }
   }
@@ -151,6 +156,7 @@ function FormularioRegistro() {
       if (nuevas.frente && nuevas.dorso) leerDocumento(nuevas)
     } catch (problema) {
       setAvisoLectura(problema.message)
+      alertaError(problema.message, 'No pudimos usar esa foto')
     }
   }
 
@@ -175,18 +181,22 @@ function FormularioRegistro() {
   const enviar = async (e) => {
     e.preventDefault()
     setValidado(true)
-    setErrorGuardado(false)
-    if (hayErrores) return
+    if (hayErrores) {
+      if (duplicado) alertaError(textoDuplicado(duplicado), 'Ya estás registrado')
+      else alertaError('Revisá los campos marcados antes de continuar.', 'Faltan datos')
+      return
+    }
 
     try {
       await cargarSocios()
-    } catch {
-      setErrorGuardado(true)
+    } catch (problema) {
+      alertaError(problema.message, 'No pudimos completar el registro')
       return
     }
     const repetido = buscarDuplicado(datos)
     if (repetido) {
       setDuplicado(repetido)
+      alertaError(textoDuplicado(repetido), 'Ya estás registrado')
       return
     }
     const { nombre, dni, fechaNacimiento, direccion, telefono, email } = datos
@@ -203,11 +213,15 @@ function FormularioRegistro() {
       medioPago: armarMedioPago(),
       lecturaIA: lecturaIA && { ...lecturaIA, corregidos: camposCorregidos(lecturaIA.leidos, datos) },
     })
-    if (!socio) {
-      setErrorGuardado(true)
-      return
-    }
-    setRegistrado(nombre.trim().split(' ')[0])
+    if (!socio) return
+    const nombrePila = nombre.trim().split(' ')[0]
+    setRegistrado(nombrePila)
+    const { isConfirmed } = await alertaMensaje({
+      titulo: `¡Bienvenido/a, ${nombrePila}!`,
+      texto: 'Recibimos tu solicitud. El personal del club va a validar tus datos y te avisaremos cuando tu carnet digital esté activo.',
+      boton: 'Ir a ingresar',
+    })
+    if (isConfirmed) navegar('/login')
   }
 
   if (registrado) {
@@ -229,19 +243,6 @@ function FormularioRegistro() {
 
   return (
     <Form noValidate onSubmit={enviar}>
-      {validado && hayErrores && (
-        <Alert variant="warning" className="py-2">
-          {duplicado
-            ? `Ya hay un socio registrado con ese ${duplicado === 'email' ? 'correo' : 'DNI'}. Si es tuyo, ingresá con tu cuenta.`
-            : 'Revisá los campos marcados antes de continuar.'}
-        </Alert>
-      )}
-      {errorGuardado && (
-        <Alert variant="danger" className="py-2">
-          No pudimos guardar tu registro en el servidor del club. Revisá tu conexión y probá de nuevo.
-        </Alert>
-      )}
-
       <Row className="g-4">
         <Col lg={5}>
           <div className={`${tarjetaVidrio} p-4 h-100`}>
