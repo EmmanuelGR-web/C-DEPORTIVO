@@ -1,9 +1,10 @@
 import { borrarSocio, buscarSocioPorEmail, crearSocio, listarSocios, modificarSocio } from '../services/sociosApi'
+import { alertaError } from './alertas'
 
 let padron = []
 let escriturasPendientes = 0
 
-export const avisarErrorApi = (mensaje) => window.dispatchEvent(new CustomEvent('club:error-api', { detail: mensaje }))
+export const avisarErrorApi = (mensaje) => alertaError(mensaje, 'Servidor del club')
 
 export const normalizarEmail = (email) => email.trim().toLowerCase()
 export const normalizarDni = (dni) => dni.replace(/\D/g, '')

@@ -28,8 +28,8 @@ const consultarPartidos = async () => {
 
 function Inicio() {
   useTituloPagina()
-  const noticias = useConsulta(listarNoticias)
-  const futbol = useConsulta(consultarPartidos)
+  const noticias = useConsulta(listarNoticias, 'No pudimos cargar las noticias')
+  const futbol = useConsulta(consultarPartidos, 'No pudimos cargar los partidos')
 
   return (
     <>
