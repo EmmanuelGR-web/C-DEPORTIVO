@@ -66,12 +66,12 @@ npm install
 npm run dev
 ```
 
-Antes de `npm run dev`, copiá `.env.example` como `.env` y completá las variables:
+Antes de `npm run dev`, creá un archivo `.env` en la raíz del proyecto con estas variables (no se sube a GitHub, está en `.gitignore`):
 
 | Variable | Para qué sirve |
 |---|---|
 | `VITE_API_URL` | URL de la API del club (proyecto de MockAPI con los recursos `socios` y `noticias`) |
-| `VITE_DEPORTES_URL`, `VITE_DEPORTES_EQUIPO`, `VITE_DEPORTES_LIGA`, `VITE_DEPORTES_NOMBRE_LIGA` | API pública de ESPN (equipo 17814 = San Martín de Tucumán, liga `arg.2` = Primera Nacional). Cambiando estos valores se muestra cualquier otro equipo y liga |
+| `VITE_DEPORTES_URL`, `VITE_DEPORTES_EQUIPO`, `VITE_DEPORTES_LIGA`, `VITE_DEPORTES_NOMBRE_LIGA` | API pública de ESPN: su dirección, el número del equipo y el código y nombre de la liga. Cambiando estos valores se muestra cualquier otro equipo y liga |
 | `GEMINI_API_KEY` | Clave gratuita de [Google AI Studio](https://aistudio.google.com/apikey) para leer DNI y comprobantes (opcional: sin ella se completan a mano) |
 
 Para cargar los datos iniciales en la API (socios de prueba y noticias) se usa `npm run sembrar`.
