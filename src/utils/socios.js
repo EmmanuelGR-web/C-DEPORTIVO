@@ -1,4 +1,6 @@
-import { borrarSocio, buscarSocioPorEmail, crearSocio, listarSocios, modificarSocio } from '../services/sociosApi'
+import { borrarSocio, listarSocios, modificarSocio, obtenerSocio, registrarSocio } from '../services/sociosApi'
+import { guardarPagoInformado } from '../services/pagosApi'
+import { iniciarSesionApi } from '../services/authApi'
 import { alertaError } from './alertas'
 
 let padron = []
@@ -17,10 +19,20 @@ export const cargarSocios = async () => {
   return padron
 }
 
-export const cifrarContrasena = async (contrasena) => {
-  const bytes = new TextEncoder().encode(contrasena)
-  const huella = await crypto.subtle.digest('SHA-256', bytes)
-  return [...new Uint8Array(huella)].map((b) => b.toString(16).padStart(2, '0')).join('')
+const cambiarEnPadron = (id, cambios) => {
+  padron = padron.map((s) => (s.id === id ? { ...s, ...cambios } : s))
+}
+
+const escribirEnSegundoPlano = async (escritura, mensajeError) => {
+  escriturasPendientes += 1
+  try {
+    return await escritura()
+  } catch (problema) {
+    avisarErrorApi(`${mensajeError} ${problema.message}`)
+    return null
+  } finally {
+    escriturasPendientes -= 1
+  }
 }
 
 export const buscarDuplicado = ({ email, dni }, excluirId) => {
@@ -30,67 +42,75 @@ export const buscarDuplicado = ({ email, dni }, excluirId) => {
   return null
 }
 
-export const guardarSocio = async ({ contrasena, ...datos }) => {
-  const nuevo = {
-    ...datos,
-    email: normalizarEmail(datos.email),
-    dni: normalizarDni(datos.dni),
-    contrasenaCifrada: await cifrarContrasena(contrasena),
-    fechaAlta: new Date().toISOString(),
-  }
+export const guardarSocio = async ({ estado, debeCambiarContrasena, ...datos }) => {
   try {
-    const socio = await crearSocio(nuevo)
-    padron = [...padron, socio]
-    return socio
+    const socio = await registrarSocio({ ...datos, email: normalizarEmail(datos.email), dni: normalizarDni(datos.dni) })
+    if (estado === 'Activo' || debeCambiarContrasena) {
+      await modificarSocio(socio, { ...(estado && { estado }), ...(debeCambiarContrasena && { debeCambiarContrasena }) })
+    }
+    const nuevo = await obtenerSocio(socio.id)
+    padron = [...padron, nuevo]
+    return nuevo
   } catch (problema) {
     avisarErrorApi(problema.message)
     return null
   }
 }
 
-export const validarSocio = async (email, contrasena) => {
-  const socio = await buscarSocioPorEmail(normalizarEmail(email))
-  if (!socio) return null
-  return socio.contrasenaCifrada === (await cifrarContrasena(contrasena)) ? socio : null
+export const actualizarSocio = (id, cambios) => {
+  const socio = padron.find((s) => s.id === id)
+  if (!socio) return false
+  cambiarEnPadron(id, cambios)
+  escribirEnSegundoPlano(() => modificarSocio(socio, cambios), 'No se pudo guardar el cambio en el servidor.')
+  return true
 }
 
-export const actualizarSocio = (id, cambios) => {
-  padron = padron.map((s) => (s.id === id ? { ...s, ...cambios } : s))
-  escriturasPendientes += 1
-  modificarSocio(id, cambios)
-    .catch((problema) => avisarErrorApi(`No se pudo guardar el cambio en el servidor. ${problema.message}`))
-    .finally(() => {
-      escriturasPendientes -= 1
-    })
+export const actualizarInforme = (id, periodo, informe) => {
+  const socio = padron.find((s) => s.id === id)
+  if (!socio) return false
+  const anterior = socio.informes?.[periodo]
+  const nuevo = { ...informe, id: informe.id ?? anterior?.id }
+  cambiarEnPadron(id, { informes: { ...socio.informes, [periodo]: nuevo } })
+  escribirEnSegundoPlano(async () => {
+    const guardado = await guardarPagoInformado(id, periodo, nuevo)
+    const actual = padron.find((s) => s.id === id)
+    if (actual) cambiarEnPadron(id, { informes: { ...actual.informes, [periodo]: guardado } })
+  }, 'No se pudo guardar el pago en el servidor.')
   return true
 }
 
 export const eliminarSocio = async (id) => {
-  await borrarSocio(id)
+  const socio = padron.find((s) => s.id === id)
+  if (!socio) return
+  await borrarSocio(socio)
   padron = padron.filter((s) => s.id !== id)
 }
 
-const claveDemo = 'contrasenasDemo'
-
-const leerContrasenasDemo = () => {
+export const restablecerContrasena = async (perfil) => {
   try {
-    return JSON.parse(localStorage.getItem(claveDemo)) ?? {}
-  } catch {
-    return {}
+    await modificarSocio(perfil, { contrasena: normalizarDni(perfil.dni), debeCambiarContrasena: true })
+    cambiarEnPadron(perfil.id, { debeCambiarContrasena: true })
+    return true
+  } catch (problema) {
+    avisarErrorApi(problema.message)
+    return false
   }
 }
 
-export const validarContrasenaDemo = async (usuario, contrasena) => {
-  const guardada = leerContrasenasDemo()[usuario.email]
-  return guardada ? guardada === (await cifrarContrasena(contrasena)) : usuario.contrasena === contrasena
-}
-
-const guardarContrasena = async (perfil, nueva, extra = {}) => actualizarSocio(perfil.id, { contrasenaCifrada: await cifrarContrasena(nueva), ...extra })
-
-export const restablecerContrasena = (perfil) => guardarContrasena(perfil, normalizarDni(perfil.dni), { debeCambiarContrasena: true })
-
 export const cambiarContrasena = async (perfil, actual, nueva) => {
-  const correcta = padron.find((s) => s.id === perfil.id)?.contrasenaCifrada === (await cifrarContrasena(actual))
-  if (!correcta) return 'actual'
-  return (await guardarContrasena(perfil, nueva, { debeCambiarContrasena: false })) ? 'ok' : 'error'
+  try {
+    await iniciarSesionApi(perfil.email, actual)
+  } catch (problema) {
+    if (problema.estado === 401) return 'actual'
+    avisarErrorApi(problema.message)
+    return 'error'
+  }
+  try {
+    await modificarSocio(perfil, { contrasena: nueva, debeCambiarContrasena: false })
+    cambiarEnPadron(perfil.id, { debeCambiarContrasena: false })
+    return 'ok'
+  } catch (problema) {
+    avisarErrorApi(problema.message)
+    return 'error'
+  }
 }

@@ -1,5 +1,7 @@
-import { actualizarSocio, leerSocios } from './socios'
+import { actualizarInforme, leerSocios } from './socios'
 
+export const cuotaMensual = 15000
+export const cuotaInscripcion = 15000
 export const diaVencimiento = 15
 export const interesDiario = 0.001
 
@@ -24,36 +26,6 @@ export const calcularCuota = (base, anio, mes, fechaPago = new Date(), vence = v
   return { base, dias, recargo, total: base + recargo }
 }
 
-const claveArchivo = (socioId, periodo) => `comprobante:${socioId}:${periodo}`
+export const leerInformes = (socioId) => leerSocios().find((s) => s.id === socioId)?.informes ?? {}
 
-const leerArchivo = (socioId, periodo) => {
-  try {
-    return localStorage.getItem(claveArchivo(socioId, periodo))
-  } catch {
-    return null
-  }
-}
-
-const guardarArchivo = (socioId, periodo, dataUrl) => {
-  try {
-    localStorage.setItem(claveArchivo(socioId, periodo), dataUrl)
-  } catch {
-    return
-  }
-}
-
-const conArchivo = (socioId, periodo, informe) =>
-  informe.comprobante ? { ...informe, comprobante: { ...informe.comprobante, dataUrl: leerArchivo(socioId, periodo) } } : informe
-
-export const leerInformes = (socioId) => {
-  const informes = leerSocios().find((s) => s.id === socioId)?.informes ?? {}
-  return Object.fromEntries(Object.entries(informes).map(([periodo, informe]) => [periodo, conArchivo(socioId, periodo, informe)]))
-}
-
-export const guardarInforme = (socioId, periodo, informe) => {
-  const { comprobante } = informe
-  if (comprobante?.dataUrl) guardarArchivo(socioId, periodo, comprobante.dataUrl)
-  const datos = comprobante ? { ...informe, comprobante: { nombre: comprobante.nombre, tipo: comprobante.tipo, tamanio: comprobante.tamanio } } : informe
-  const actuales = leerSocios().find((s) => s.id === socioId)?.informes ?? {}
-  return actualizarSocio(socioId, { informes: { ...actuales, [periodo]: datos } })
-}
+export const guardarInforme = (socioId, periodo, informe) => actualizarInforme(socioId, periodo, informe)
