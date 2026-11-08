@@ -80,6 +80,16 @@ El backend tiene que estar prendido: en el repo 3, `npm run start:dev`. Los dato
 
 Después abrí el link que muestra la terminal (normalmente `http://localhost:5173`). Para generar la versión final se usa `npm run build`. En Vercel, las mismas variables se cargan en *Settings → Environment Variables*.
 
+### Sitio publicado y backend local
+
+El backend no se publica: corre en la computadora de quien usa el sitio. En Vercel, `VITE_API_URL` vale `http://localhost:4000`, así que el sitio publicado le pide los datos al backend local. Para usarlo:
+
+1. En el repo 3, `npm run start:dev` (con su `.env` y la base cargada).
+2. Abrir [c-deportivo.vercel.app](https://c-deportivo.vercel.app/) **en la misma computadora**.
+3. Si el navegador pregunta si el sitio puede acceder a dispositivos de la red local, elegir **Permitir**.
+
+Sin el backend prendido, el sitio carga igual (inicio, fútbol, disciplinas), pero no se pueden ver las noticias ni iniciar sesión. Vite guarda `VITE_API_URL` al hacer el build, así que si se cambia en Vercel hay que volver a publicar (*Deployments → Redeploy*).
+
 ## Estructura
 
 ```
