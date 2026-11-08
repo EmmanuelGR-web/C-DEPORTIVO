@@ -21,15 +21,18 @@ export function useDatosEnVivo(leer) {
 
   useEffect(() => {
     let vigente = true
-    const consultar = () =>
-      cargarSocios()
-        .then(() => {
-          if (!vigente) return
-          setDatos(leer())
-          setActualizado(new Date())
-          setError('')
-        })
-        .catch((problema) => vigente && setError(problema.message))
+
+    const consultar = async () => {
+      try {
+        await cargarSocios()
+        if (!vigente) return
+        setDatos(leer())
+        setActualizado(new Date())
+        setError('')
+      } catch (problema) {
+        if (vigente) setError(problema.message)
+      }
+    }
 
     consultar()
     const intervalo = setInterval(consultar, cadaCuanto)

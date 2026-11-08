@@ -3,6 +3,7 @@ import { Row, Col, Form, Button, Table, Modal, Badge, FloatingLabel, Image } fro
 import Tarjeta from '../common/Tarjeta'
 import EstadoConsulta from '../common/EstadoConsulta'
 import { useConsulta } from '../../hooks/useConsulta'
+import { useSesion } from '../../hooks/useSesion'
 import { borrarNoticia, crearNoticia, listarNoticias, modificarNoticia } from '../../services/noticiasApi'
 import { categoriasNoticia, coloresCategoria } from '../../data/noticias'
 import { formatearFecha } from '../../utils/fechas'
@@ -26,6 +27,7 @@ const aNoticia = (datos) => ({
 })
 
 function GestionNoticias() {
+  const { usuario } = useSesion()
   const { datos: noticias, cargando, error, recargar } = useConsulta(listarNoticias)
   const [editando, setEditando] = useState(null)
   const [formulario, setFormulario] = useState(vacia)
@@ -73,7 +75,7 @@ function GestionNoticias() {
     setEnviando(true)
     try {
       if (editando.id) await modificarNoticia(editando.id, aNoticia(formulario))
-      else await crearNoticia(aNoticia(formulario))
+      else await crearNoticia(aNoticia(formulario), usuario.userId)
       setEditando(null)
       alertaExito(editando.id ? 'Se guardaron los cambios de la noticia.' : 'La noticia ya está publicada en Inicio.')
       await recargar()

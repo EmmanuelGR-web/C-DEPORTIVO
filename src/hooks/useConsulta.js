@@ -6,13 +6,19 @@ export function useConsulta(consultar, tituloError = 'No pudimos cargar los dato
 
   useEffect(() => {
     let vigente = true
-    consultar()
-      .then((datos) => vigente && setEstado({ datos, cargando: false, error: '' }))
-      .catch((problema) => {
+
+    const cargarDatos = async () => {
+      try {
+        const datos = await consultar()
+        if (vigente) setEstado({ datos, cargando: false, error: '' })
+      } catch (problema) {
         if (!vigente) return
         setEstado({ datos: null, cargando: false, error: problema.message })
         alertaError(problema.message, tituloError)
-      })
+      }
+    }
+
+    cargarDatos()
     return () => {
       vigente = false
     }
@@ -21,7 +27,8 @@ export function useConsulta(consultar, tituloError = 'No pudimos cargar los dato
   const recargar = useCallback(async () => {
     setEstado((actual) => ({ ...actual, cargando: true, error: '' }))
     try {
-      setEstado({ datos: await consultar(), cargando: false, error: '' })
+      const datos = await consultar()
+      setEstado({ datos, cargando: false, error: '' })
     } catch (problema) {
       setEstado({ datos: null, cargando: false, error: problema.message })
       alertaError(problema.message, tituloError)

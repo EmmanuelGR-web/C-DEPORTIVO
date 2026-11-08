@@ -1,7 +1,7 @@
 import { leerSocios, actualizarSocio, normalizarDni } from './socios'
-import { categoriaPorAntiguedad, cuotaPorCategoria } from './categorias'
+import { categoriaPorAntiguedad } from './categorias'
 import { leerAuditoria, registrarCambios } from './auditoria'
-import { calcularCuota, leerInformes, vencimientoDe, vencimientoInicial } from './cuotas'
+import { calcularCuota, cuotaInscripcion, cuotaMensual, leerInformes, vencimientoDe, vencimientoInicial } from './cuotas'
 
 const aniosEntre = (desde, hasta) => (hasta - desde) / (365.25 * 24 * 3600 * 1000)
 
@@ -27,7 +27,7 @@ const datosBase = (usuario) => {
   if (!registrado) return null
   return {
     ...registrado,
-    numeroSocio: String(new Date(registrado.fechaAlta).getTime()).slice(-8),
+    numeroSocio: String(registrado.numeroSocio),
     medioPago: registrado.medioPago ?? { tipo: registrado.pago ?? 'efectivo', debitoAutomatico: false },
     esRegistrado: true,
   }
@@ -46,13 +46,14 @@ const generarPagos = (base, hoy) => {
     const periodo = `${anio}-${String(numeroMes + 1).padStart(2, '0')}`
     const esActual = anio === hoy.getFullYear() && numeroMes === hoy.getMonth()
     const vence = indice === 0 ? vencimientoInicial(base.fechaAlta) : vencimientoDe(anio, numeroMes)
-    const montoBase = cuotaPorCategoria[categoriaPorAntiguedad(aniosEntre(alta, mes))] * (indice === 0 ? 2 : 1)
+    const esPrimerMes = indice === 0
+    const montoBase = esPrimerMes ? cuotaInscripcion + cuotaMensual : cuotaMensual
     const pago = {
       id: periodo,
       periodo,
       fecha: `${String(numeroMes + 1).padStart(2, '0')}/${anio}`,
       anio,
-      concepto: indice === 0 ? 'Inscripción y cuota' : 'Cuota mensual',
+      concepto: esPrimerMes ? 'Inscripción y cuota' : 'Cuota mensual',
       medio: textoMedio(base.medioPago),
       base: montoBase,
       recargo: 0,
