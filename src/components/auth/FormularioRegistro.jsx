@@ -13,6 +13,8 @@ import { camposCorregidos, leerConIA } from '../../utils/lecturaIA'
 import { leerAdjunto } from '../../utils/mensajes'
 import { formatearFechaConAnio } from '../../utils/fechas'
 import { buscarDuplicado, cargarSocios, guardarSocio } from '../../utils/socios'
+import { cuotaInscripcion, cuotaMensual } from '../../utils/cuotas'
+import { formatearPesos } from '../../utils/carnet'
 import { tarjetaVidrio } from './estilosAuth'
 import { alertaAviso, alertaError, alertaMensaje } from '../../utils/alertas'
 
@@ -284,6 +286,10 @@ function FormularioRegistro() {
             <p className="small text-white-50 text-center mb-4">Es la foto que va a aparecer en tu carnet digital.</p>
 
             <Titulo>3. Método de pago *</Titulo>
+            <p className="small text-white-50 mb-3">
+              El primer mes pagás {formatearPesos(cuotaInscripcion + cuotaMensual)}: la inscripción de {formatearPesos(cuotaInscripcion)}, por única vez, más la cuota de{' '}
+              {formatearPesos(cuotaMensual)}. Desde el mes siguiente, solo la cuota.
+            </p>
             <Row className="g-3">
               {mediosPago.map((medio) => (
                 <Col xs={6} key={medio.valor}>

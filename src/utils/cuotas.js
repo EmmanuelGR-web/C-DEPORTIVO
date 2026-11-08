@@ -1,6 +1,7 @@
 import { actualizarInforme, leerSocios } from './socios'
 
 export const cuotaMensual = 15000
+export const cuotaInscripcion = 15000
 export const diaVencimiento = 15
 export const interesDiario = 0.001
 
