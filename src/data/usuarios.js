@@ -1,27 +1,17 @@
 export const usuariosDemo = [
   {
-    email: 'socio@club.com',
+    email: 'jperez@gmail.com',
     contrasena: 'socio123',
-    nombre: 'Juan Pérez',
-    rol: 'socio',
     rolTexto: 'Socio',
-    ruta: '/socio',
   },
   {
-    email: 'administrativo@club.com',
-    contrasena: 'admin123',
-    nombre: 'Pedro Díaz',
-    rol: 'empleado',
+    email: 'pedro.diaz@clubdeportivo.com.ar',
+    contrasena: 'personal123',
     rolTexto: 'Personal administrativo',
-    empleadoId: 'emp-a01',
-    ruta: '/empleado',
   },
   {
-    email: 'administrador@club.com',
-    contrasena: 'principal123',
-    nombre: 'Laura Gómez',
-    rol: 'admin',
+    email: 'laura.gomez@clubdeportivo.com.ar',
+    contrasena: 'admin123',
     rolTexto: 'Administradora principal',
-    ruta: '/admin',
   },
 ]

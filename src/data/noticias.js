@@ -1,8 +1,9 @@
 export const coloresCategoria = {
-  Fútbol: { bg: 'primary' },
   Institucional: { bg: 'warning', text: 'dark' },
-  Tienda: { bg: 'dark' },
+  Fútbol: { bg: 'primary' },
   Básquet: { bg: 'light', text: 'dark', borde: true },
+  Natación: { bg: 'secondary' },
+  Hockey: { bg: 'dark' },
 }
 
 export const categoriasNoticia = Object.keys(coloresCategoria)

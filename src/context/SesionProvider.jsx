@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { SesionContext } from './SesionContext'
-import { usuariosDemo } from '../data/usuarios'
-import { normalizarEmail, validarContrasenaDemo, validarSocio } from '../utils/socios'
-import { accesoRestringido } from '../utils/personal'
+import { iniciarSesionApi } from '../services/authApi'
+import { normalizarEmail } from '../utils/socios'
+import { accesoRestringido, leerPersonal } from '../utils/personal'
+import { adminDemo } from '../data/gestion'
 
 const clave = 'sesionClub'
 
@@ -15,27 +16,38 @@ const leerSesion = () => {
   }
 }
 
+const armarSesion = (usuarioApi) => {
+  const { id: userId, nombre, email, rol } = usuarioApi
+  if (rol === 'socio' && usuarioApi.member) {
+    return { id: usuarioApi.member.id, userId, nombre, email, rol: 'socio', rolTexto: 'Socio', ruta: '/socio' }
+  }
+  if (rol === 'admin') {
+    return { userId, nombre, email, rol: 'admin', rolTexto: adminDemo.puesto, ruta: '/admin' }
+  }
+  if (rol === 'personal') {
+    const empleado = leerPersonal().find((e) => e.correo.toLowerCase() === email)
+    return { userId, nombre, email, rol: 'empleado', rolTexto: empleado?.rol ?? 'Personal', ruta: '/empleado', empleadoId: empleado?.id }
+  }
+  return null
+}
+
 function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(leerSesion)
 
   const iniciarSesion = async (email, contrasena, recordar) => {
-    const candidato = usuariosDemo.find((u) => u.email === normalizarEmail(email) && u.rol !== 'socio')
-    const demo = candidato && (await validarContrasenaDemo(candidato, contrasena)) ? candidato : null
-    let socio = null
-    if (!demo) {
-      try {
-        socio = await validarSocio(email, contrasena)
-      } catch (problema) {
-        return { errorConexion: problema.message }
-      }
+    let usuarioApi
+    try {
+      usuarioApi = await iniciarSesionApi(normalizarEmail(email), contrasena)
+    } catch (problema) {
+      if (problema.estado === 401) return null
+      return { errorConexion: problema.message }
     }
-    if (!demo && !socio) return null
-    const ausencia = demo?.empleadoId && accesoRestringido(demo.empleadoId)
+
+    const datos = armarSesion(usuarioApi)
+    if (!datos) return { errorConexion: 'Tu usuario no tiene un panel asignado.' }
+    const ausencia = datos.empleadoId && accesoRestringido(datos.empleadoId)
     if (ausencia) return { bloqueado: ausencia }
 
-    const datos = demo
-      ? { nombre: demo.nombre, email: demo.email, rol: demo.rol, rolTexto: demo.rolTexto, ruta: demo.ruta, empleadoId: demo.empleadoId }
-      : { id: socio.id, nombre: socio.nombre, email: socio.email, rol: 'socio', rolTexto: 'Socio', ruta: '/socio' }
     const almacen = recordar ? localStorage : sessionStorage
     almacen.setItem(clave, JSON.stringify(datos))
     setUsuario(datos)
